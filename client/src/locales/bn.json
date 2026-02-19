@@ -393,6 +393,10 @@
     "archive_item": "আর্কাইভ আইটেম",
     "archive_name": "আর্কাইভের নাম",
     "archive_type": "আর্কাইভের ধরন",
-    "new_directory": "নতুন ডিরেক্টরি"
+    "current_directory": "বর্তমান ডিরেক্টরি",
+    "folder_name": "ফোল্ডারের নাম",
+    "new_folder_placeholder": "নতুন ফোল্ডারের নাম লিখুন",
+    "local_file_path": "লোকাল ফাইল পাথ",
+    "local_file_path_placeholder": "/path/to/local/file"
   }
 }

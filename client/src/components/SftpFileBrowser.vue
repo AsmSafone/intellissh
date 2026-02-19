@@ -153,12 +153,12 @@
         <button 
           @click="showCreateDirectoryDialog = true"
           class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded transition-colors flex items-center"
-          :title="$t('message.new_directory')"
+          :title="$t('message.new_folder')"
         >
           <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
           </svg>
-          {{ $t('message.new_directory') }}
+          {{ $t('message.new_folder') }}
         </button>
 
         <div class="w-px bg-slate-600 mx-1"></div>

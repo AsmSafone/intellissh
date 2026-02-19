@@ -393,6 +393,10 @@
     "archive_item": "归档项目",
     "archive_name": "归档名称",
     "archive_type": "归档类型",
-    "new_directory": "新建文件夹"
+    "current_directory": "当前目录",
+    "folder_name": "文件夹名称",
+    "new_folder_placeholder": "输入新文件夹名称",
+    "local_file_path": "本地文件路径",
+    "local_file_path_placeholder": "/path/to/local/file"
   }
 }

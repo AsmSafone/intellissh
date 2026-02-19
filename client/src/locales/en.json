@@ -393,6 +393,10 @@
     "archive_item": "Archive Item",
     "archive_name": "Archive Name",
     "archive_type": "Archive Type",
-    "new_directory": "New Directory"
+    "current_directory": "Current Directory",
+    "folder_name": "Folder Name",
+    "new_folder_placeholder": "Enter new folder name",
+    "local_file_path": "Local File Path",
+    "local_file_path_placeholder": "/path/to/local/file"
   }
 }
