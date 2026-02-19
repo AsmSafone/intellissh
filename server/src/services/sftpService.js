@@ -17,7 +17,7 @@ class SFTPService extends EventEmitter {
       console.log(`Attempting SFTP connection to ${username}@${hostname}:${port}`);
 
       const conn = new Client();
-      
+
       return new Promise((resolve, reject) => {
         let connectionTimeout = setTimeout(() => {
           conn.end();
@@ -27,7 +27,7 @@ class SFTPService extends EventEmitter {
         conn.on('ready', () => {
           clearTimeout(connectionTimeout);
           console.log(`SSH connection established for SFTP: ${connectionId}`);
-          
+
           // Request SFTP subsystem
           conn.sftp((err, sftp) => {
             if (err) {
@@ -51,7 +51,7 @@ class SFTPService extends EventEmitter {
 
             // Set up connection event handlers
             this.setupConnectionHandlers(connectionId, conn, sftp, socket);
-            
+
             resolve({
               connectionId,
               success: true,
@@ -197,6 +197,46 @@ class SFTPService extends EventEmitter {
           socket.emit('sftp-error', { message: error.message });
         }
       });
+
+      socket.on('sftp-move-item', async (data) => {
+        try {
+          const { sourcePath, destPath } = data;
+          await this.moveItem(connectionId, sourcePath, destPath);
+          socket.emit('sftp-item-moved', { sourcePath, destPath });
+        } catch (error) {
+          socket.emit('sftp-error', { message: error.message });
+        }
+      });
+
+      socket.on('sftp-copy-item', async (data) => {
+        try {
+          const { sourcePath, destPath } = data;
+          await this.copyItem(connectionId, sourcePath, destPath);
+          socket.emit('sftp-item-copied', { sourcePath, destPath });
+        } catch (error) {
+          socket.emit('sftp-error', { message: error.message });
+        }
+      });
+
+      socket.on('sftp-archive-item', async (data) => {
+        try {
+          const { sourcePath, archiveName, type } = data;
+          await this.archiveItem(connectionId, sourcePath, archiveName, type);
+          socket.emit('sftp-item-archived', { sourcePath, archiveName });
+        } catch (error) {
+          socket.emit('sftp-error', { message: error.message });
+        }
+      });
+
+      socket.on('sftp-extract-item', async (data) => {
+        try {
+          const { sourcePath, type } = data;
+          await this.extractItem(connectionId, sourcePath, type);
+          socket.emit('sftp-item-extracted', { sourcePath });
+        } catch (error) {
+          socket.emit('sftp-error', { message: error.message });
+        }
+      });
     }
   }
 
@@ -296,7 +336,7 @@ class SFTPService extends EventEmitter {
         writeStream.on('close', () => {
           connection.activeTransfers.delete(transferId);
           connection.lastActivity = Date.now();
-          
+
           const result = {
             success: true,
             localPath,
@@ -309,7 +349,7 @@ class SFTPService extends EventEmitter {
           if (connection.socket) {
             connection.socket.emit('sftp-upload-complete', result);
           }
-          
+
           this.emit('upload-complete', connectionId, result);
           resolve(result);
         });
@@ -317,14 +357,14 @@ class SFTPService extends EventEmitter {
         writeStream.on('error', (err) => {
           connection.activeTransfers.delete(transferId);
           const error = new Error(`Upload failed: ${err.message}`);
-          
+
           if (connection.socket) {
-            connection.socket.emit('sftp-upload-error', { 
-              transferId, 
-              message: error.message 
+            connection.socket.emit('sftp-upload-error', {
+              transferId,
+              message: error.message
             });
           }
-          
+
           this.emit('upload-error', connectionId, error);
           reject(error);
         });
@@ -332,14 +372,14 @@ class SFTPService extends EventEmitter {
         readStream.on('error', (err) => {
           connection.activeTransfers.delete(transferId);
           const error = new Error(`Read failed: ${err.message}`);
-          
+
           if (connection.socket) {
-            connection.socket.emit('sftp-upload-error', { 
-              transferId, 
-              message: error.message 
+            connection.socket.emit('sftp-upload-error', {
+              transferId,
+              message: error.message
             });
           }
-          
+
           this.emit('upload-error', connectionId, error);
           reject(error);
         });
@@ -402,14 +442,14 @@ class SFTPService extends EventEmitter {
           if (connection.socket) {
             connection.socket.emit('sftp-download-progress', progress);
           }
-          
+
           this.emit('download-progress', connectionId, progress);
         });
 
         writeStream.on('close', () => {
           connection.activeTransfers.delete(transferId);
           connection.lastActivity = Date.now();
-          
+
           const result = {
             success: true,
             remotePath,
@@ -422,7 +462,7 @@ class SFTPService extends EventEmitter {
           if (connection.socket) {
             connection.socket.emit('sftp-download-complete', result);
           }
-          
+
           this.emit('download-complete', connectionId, result);
           resolve(result);
         });
@@ -430,14 +470,14 @@ class SFTPService extends EventEmitter {
         readStream.on('error', (err) => {
           connection.activeTransfers.delete(transferId);
           const error = new Error(`Download failed: ${err.message}`);
-          
+
           if (connection.socket) {
-            connection.socket.emit('sftp-download-error', { 
-              transferId, 
-              message: error.message 
+            connection.socket.emit('sftp-download-error', {
+              transferId,
+              message: error.message
             });
           }
-          
+
           this.emit('download-error', connectionId, error);
           reject(error);
         });
@@ -445,14 +485,14 @@ class SFTPService extends EventEmitter {
         writeStream.on('error', (err) => {
           connection.activeTransfers.delete(transferId);
           const error = new Error(`Write failed: ${err.message}`);
-          
+
           if (connection.socket) {
-            connection.socket.emit('sftp-download-error', { 
-              transferId, 
-              message: error.message 
+            connection.socket.emit('sftp-download-error', {
+              transferId,
+              message: error.message
             });
           }
-          
+
           this.emit('download-error', connectionId, error);
           reject(error);
         });
@@ -571,11 +611,97 @@ class SFTPService extends EventEmitter {
   calculateSpeed(bytes, milliseconds) {
     if (milliseconds === 0) return 0;
     const bytesPerSecond = (bytes * 1000) / milliseconds;
-    
+
     if (bytesPerSecond < 1024) return `${Math.round(bytesPerSecond)} B/s`;
     if (bytesPerSecond < 1024 * 1024) return `${Math.round(bytesPerSecond / 1024)} KB/s`;
     if (bytesPerSecond < 1024 * 1024 * 1024) return `${Math.round(bytesPerSecond / (1024 * 1024))} MB/s`;
     return `${Math.round(bytesPerSecond / (1024 * 1024 * 1024))} GB/s`;
+  }
+
+  // Execute a command on the remote server using the existing connection
+  async executeCommand(connectionId, command) {
+    const connection = this.connections.get(connectionId);
+    if (!connection || !connection.connected) {
+      throw new Error('SFTP connection not available');
+    }
+
+    return new Promise((resolve, reject) => {
+      connection.client.exec(command, (err, stream) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        let output = '';
+        let errorOutput = '';
+
+        stream.on('close', (code, signal) => {
+          connection.lastActivity = Date.now();
+          if (code === 0) {
+            resolve({ success: true, output });
+          } else {
+            reject(new Error(`Command failed with code ${code}: ${errorOutput || output}`));
+          }
+        }).on('data', (data) => {
+          output += data;
+        }).stderr.on('data', (data) => {
+          errorOutput += data;
+        });
+      });
+    });
+  }
+
+  async moveItem(connectionId, sourcePath, destPath) {
+    const escapedSource = sourcePath.replace(/"/g, '\\"');
+    const escapedDest = destPath.replace(/"/g, '\\"');
+    const command = `mv "${escapedSource}" "${escapedDest}"`;
+    return this.executeCommand(connectionId, command);
+  }
+
+  async copyItem(connectionId, sourcePath, destPath) {
+    const escapedSource = sourcePath.replace(/"/g, '\\"');
+    const escapedDest = destPath.replace(/"/g, '\\"');
+
+    const command = `cp -r "${escapedSource}" "${escapedDest}"`;
+
+    return this.executeCommand(connectionId, command);
+  }
+
+  async archiveItem(connectionId, sourcePath, archiveName, type) {
+    const escapedSource = sourcePath.replace(/"/g, '\\"');
+    const escapedArchiveName = archiveName.replace(/"/g, '\\"');
+    const parentDir = path.dirname(sourcePath);
+    const sourceBasename = path.basename(sourcePath);
+
+    let command;
+    // Execute within the parent directory to avoid full paths in the archive
+    if (type === 'zip') {
+      // Check for zip availability first? Assuming standard Linux tools
+      command = `cd "${path.dirname(sourcePath)}" && zip -r "${escapedArchiveName}" "${sourceBasename}"`;
+    } else { // tar.gz
+      command = `cd "${path.dirname(sourcePath)}" && tar -czf "${escapedArchiveName}" "${sourceBasename}"`;
+    }
+
+    return this.executeCommand(connectionId, command);
+  }
+
+  async extractItem(connectionId, sourcePath, type) {
+    const escapedSource = sourcePath.replace(/"/g, '\\"');
+    const parentDir = path.dirname(sourcePath);
+
+    let command;
+    if (type === 'zip' || sourcePath.endsWith('.zip')) {
+      command = `cd "${parentDir}" && unzip -o "${escapedSource}"`;
+    } else {
+      // Handle .tar.gz, .tgz, .tar
+      let flags = '-xf';
+      if (sourcePath.endsWith('.gz') || sourcePath.endsWith('.tgz')) {
+        flags = '-xzf';
+      }
+      command = `cd "${parentDir}" && tar ${flags} "${escapedSource}"`;
+    }
+
+    return this.executeCommand(connectionId, command);
   }
 
   disconnect(connectionId) {
@@ -584,21 +710,21 @@ class SFTPService extends EventEmitter {
 
     try {
       console.log(`Disconnecting SFTP connection: ${connectionId}`);
-      
+
       // Cancel active transfers
       for (const [transferId, transfer] of connection.activeTransfers) {
         console.log(`Cancelling transfer: ${transferId}`);
         connection.activeTransfers.delete(transferId);
       }
-      
+
       if (connection.sftp) {
         connection.sftp.end();
       }
-      
+
       if (connection.client) {
         connection.client.end();
       }
-      
+
       this.cleanup(connectionId);
       return true;
     } catch (error) {
@@ -612,7 +738,7 @@ class SFTPService extends EventEmitter {
     const connection = this.connections.get(connectionId);
     if (connection) {
       connection.connected = false;
-      
+
       try {
         if (connection.socket) {
           connection.socket.emit('sftp-disconnected');
@@ -620,7 +746,7 @@ class SFTPService extends EventEmitter {
       } catch (error) {
         // Socket might already be disconnected
       }
-      
+
       this.connections.delete(connectionId);
       console.log(`Cleaned up SFTP connection: ${connectionId}`);
     }
@@ -649,7 +775,7 @@ class SFTPService extends EventEmitter {
   getActiveTransfers(connectionId) {
     const connection = this.connections.get(connectionId);
     if (!connection) return [];
-    
+
     return Array.from(connection.activeTransfers.values());
   }
 
@@ -667,13 +793,13 @@ class SFTPService extends EventEmitter {
       conn.on('ready', () => {
         conn.sftp((err, sftp) => {
           clearTimeout(connectionTimeout);
-          
+
           if (err) {
             conn.end();
             reject(new Error(`SFTP subsystem failed: ${err.message}`));
             return;
           }
-          
+
           sftp.end();
           conn.end();
           resolve({ success: true, message: 'SFTP connection successful' });

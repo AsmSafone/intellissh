@@ -428,11 +428,173 @@
         </div>
       </div>
     </div>
+    <!-- Context Menu -->
+    <div 
+      v-if="contextMenuVisible" 
+      class="fixed bg-slate-800 border border-slate-600 rounded shadow-xl z-50 py-1 min-w-[150px]"
+      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }"
+      @click.stop
+    >
+      <div 
+        @click="openRenameDialog(); closeContextMenu()" 
+        class="px-4 py-2 hover:bg-slate-700 text-white text-sm cursor-pointer"
+      >
+        {{ $t('message.rename') }}
+      </div>
+      <div 
+        @click="openCopyDialog(); closeContextMenu()" 
+        class="px-4 py-2 hover:bg-slate-700 text-white text-sm cursor-pointer"
+      >
+        {{ $t('message.copy') }}
+      </div>
+      <div 
+        @click="openMoveDialog(); closeContextMenu()" 
+        class="px-4 py-2 hover:bg-slate-700 text-white text-sm cursor-pointer"
+      >
+        {{ $t('message.move') }}
+      </div>
+      <div 
+        v-if="canExtract"
+        @click="performExtract(); closeContextMenu()" 
+        class="px-4 py-2 hover:bg-slate-700 text-white text-sm cursor-pointer"
+      >
+        {{ $t('message.extract') }}
+      </div>
+      <div 
+        @click="openArchiveDialog(); closeContextMenu()" 
+        class="px-4 py-2 hover:bg-slate-700 text-white text-sm cursor-pointer"
+      >
+        {{ $t('message.archive') }}
+      </div>
+      <div class="border-t border-slate-700 my-1"></div>
+      <div 
+        @click="downloadSelectedItem(); closeContextMenu()" 
+        class="px-4 py-2 hover:bg-slate-700 text-white text-sm cursor-pointer"
+        v-if="canDownload"
+      >
+        {{ $t('message.download') }}
+      </div>
+      <div 
+        @click="openDeleteDialog(); closeContextMenu()" 
+        class="px-4 py-2 hover:bg-red-900/50 text-red-300 text-sm cursor-pointer"
+      >
+        {{ $t('message.delete') }}
+      </div>
+    </div>
+
+    <!-- Rename Dialog -->
+    <div v-if="showRenameDialog" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div class="bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-4">
+        <h3 class="text-lg font-medium text-white mb-3">{{ $t('message.rename') }}</h3>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-300 mb-1">{{ $t('message.new_name') }}</label>
+          <input 
+            v-model="newName" 
+            type="text" 
+            class="w-full bg-slate-700 text-white px-3 py-2 rounded-md text-sm"
+            @keyup.enter="performRename"
+          />
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+          <button 
+            @click="showRenameDialog = false" 
+            class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded transition-colors"
+          >
+            {{ $t('message.cancel') }}
+          </button>
+          <button 
+            @click="performRename"
+            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded transition-colors"
+          >
+            {{ $t('message.rename') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copy/Move Dialog -->
+    <div v-if="showCopyMoveDialog" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div class="bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-4">
+        <h3 class="text-lg font-medium text-white mb-3">
+           {{ isMoveOperation ? $t('message.move_item') : $t('message.copy_item') }}
+        </h3>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-300 mb-1">{{ $t('message.destination_path') }}</label>
+          <input 
+            v-model="copyMoveDestPath" 
+            type="text" 
+            class="w-full bg-slate-700 text-white px-3 py-2 rounded-md text-sm"
+            @keyup.enter="performCopyMove"
+          />
+          <p class="text-xs text-slate-400 mt-1">{{ $t('message.destination_path_hint') }}</p>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+          <button 
+            @click="showCopyMoveDialog = false" 
+            class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded transition-colors"
+          >
+            {{ $t('message.cancel') }}
+          </button>
+          <button 
+            @click="performCopyMove"
+            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded transition-colors"
+          >
+            {{ isMoveOperation ? $t('message.move') : $t('message.copy') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Archive Dialog -->
+    <div v-if="showArchiveDialog" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div class="bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-4">
+        <h3 class="text-lg font-medium text-white mb-3">{{ $t('message.archive_item') }}</h3>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-300 mb-1">{{ $t('message.archive_name') }}</label>
+          <input 
+            v-model="archiveName" 
+            type="text" 
+            class="w-full bg-slate-700 text-white px-3 py-2 rounded-md text-sm"
+          />
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-300 mb-1">{{ $t('message.archive_type') }}</label>
+          <select 
+            v-model="archiveType"
+            class="w-full bg-slate-700 text-white px-3 py-2 rounded-md text-sm"
+          >
+            <option value="zip">ZIP</option>
+            <option value="tar">TAR.GZ</option>
+          </select>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+          <button 
+            @click="showArchiveDialog = false" 
+            class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded transition-colors"
+          >
+            {{ $t('message.cancel') }}
+          </button>
+          <button 
+            @click="performArchive"
+            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded transition-colors"
+          >
+            {{ $t('message.archive') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useTerminalStore } from '@/stores/terminalStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useI18n } from 'vue-i18n'
@@ -447,9 +609,21 @@ const showUploadFileDialog = ref(false)
 const showCreateDirectoryDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showDownloadDialog = ref(false)
+const showRenameDialog = ref(false)
+const showCopyMoveDialog = ref(false)
+const showArchiveDialog = ref(false)
 const uploadLocalPath = ref('')
 const downloadLocalPath = ref('')
 const newDirectoryName = ref('')
+const newName = ref('')
+const copyMoveDestPath = ref('')
+const isMoveOperation = ref(false)
+const archiveName = ref('')
+const archiveType = ref('zip')
+
+// Context Menu State
+const contextMenuVisible = ref(false)
+const contextMenuPosition = ref({ x: 0, y: 0 })
 
 // Computed properties
 const sortedDirectoryContents = computed(() => {
@@ -474,7 +648,62 @@ const canDownload = computed(() => {
   return selectedItem.value && selectedItem.value.attrs.isFile
 })
 
+const canExtract = computed(() => {
+  if (!selectedItem.value || !selectedItem.value.attrs.isFile) return false
+  const name = selectedItem.value.filename.toLowerCase()
+  return name.endsWith('.zip') || name.endsWith('.tar.gz') || name.endsWith('.tgz') || name.endsWith('.tar')
+})
+
 // Methods
+// Context Menu Handler
+const handleContextMenu = (event, item) => {
+  event.preventDefault()
+  selectItem(item)
+  contextMenuPosition.value = { x: event.clientX, y: event.clientY }
+  contextMenuVisible.value = true
+}
+
+// Close context menu on click outside
+const closeContextMenu = () => {
+  contextMenuVisible.value = false
+}
+
+// Register click listener to close context menu
+onMounted(() => {
+  document.addEventListener('click', closeContextMenu)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeContextMenu)
+})
+
+// Dialog Openers
+const openRenameDialog = () => {
+  newName.value = selectedItem.value.filename
+  showRenameDialog.value = true
+}
+
+const openCopyDialog = () => {
+  isMoveOperation.value = false
+  copyMoveDestPath.value = terminalStore.currentDirectory
+  showCopyMoveDialog.value = true
+}
+
+const openMoveDialog = () => {
+  isMoveOperation.value = true
+  copyMoveDestPath.value = terminalStore.currentDirectory
+  showCopyMoveDialog.value = true
+}
+
+const openArchiveDialog = () => {
+  archiveName.value = `${selectedItem.value.filename}.zip`
+  archiveType.value = 'zip'
+  showArchiveDialog.value = true
+}
+
+const openDeleteDialog = () => {
+    showDeleteDialog.value = true
+}
 const connectSftp = async () => {
   if (!terminalStore.hasActiveSession) {
     terminalStore.sftpConnectionError = t('message.no_active_terminal_session')
@@ -589,6 +818,97 @@ const getFullPath = (filename) => {
   } else {
     return `${currentPath}/${filename}`
   }
+}
+
+const performRename = async () => {
+  try {
+    loading.value = true
+    const oldPath = getFullPath(selectedItem.value.filename)
+    
+    // Calculate new path based on whether parent dir is changed or just filename
+    // For simple rename, we assume same directory.
+    let newPath
+    if (newName.value.startsWith('/')) {
+        newPath = newName.value
+    } else {
+        const currentPath = terminalStore.currentDirectory
+        newPath = currentPath === '/' ? `/${newName.value}` : `${currentPath}/${newName.value}`
+    }
+
+    await terminalStore.renameFile(oldPath, newPath)
+    showRenameDialog.value = false
+    await listCurrentDirectory()
+  } catch (error) {
+    console.error('Failed to rename:', error)
+    alert(`Rename failed: ${error.message}`)
+  } finally {
+    loading.value = false
+  }
+}
+
+const performCopyMove = async () => {
+  try {
+    loading.value = true
+    const sourcePath = getFullPath(selectedItem.value.filename)
+    
+    // Construct destination path
+    let targetPath = copyMoveDestPath.value
+    if (!targetPath.endsWith('/')) {
+        targetPath += '/'
+    }
+    targetPath += selectedItem.value.filename
+
+    if (isMoveOperation.value) {
+        await terminalStore.moveItem(sourcePath, targetPath)
+    } else {
+        await terminalStore.copyItem(sourcePath, targetPath)
+    }
+    
+    showCopyMoveDialog.value = false
+    await listCurrentDirectory()
+  } catch (error) {
+    console.error('Failed to copy/move:', error)
+    alert(`Operation failed: ${error.message}`)
+  } finally {
+    loading.value = false
+  }
+}
+
+const performArchive = async () => {
+  try {
+    loading.value = true
+    const sourcePath = getFullPath(selectedItem.value.filename)
+    
+    await terminalStore.archiveItem(sourcePath, archiveName.value, archiveType.value)
+    
+    showArchiveDialog.value = false
+    await listCurrentDirectory()
+  } catch (error) {
+    console.error('Failed to archive:', error)
+    alert(`Archive failed: ${error.message}`)
+  } finally {
+    loading.value = false
+  }
+}
+
+const performExtract = async () => {
+    if (!canExtract.value) return
+
+    try {
+        loading.value = true
+        const sourcePath = getFullPath(selectedItem.value.filename)
+        // Determine type from extension
+        const type = sourcePath.toLowerCase().endsWith('.zip') ? 'zip' : 'tar'
+        
+        await terminalStore.extractItem(sourcePath, type)
+        await listCurrentDirectory()
+        alert('Extraction complete')
+    } catch (error) {
+        console.error('Failed to extract:', error)
+        alert(`Extraction failed: ${error.message}`)
+    } finally {
+        loading.value = false
+    }
 }
 
 const uploadFile = async () => {

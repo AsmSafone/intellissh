@@ -13,7 +13,7 @@ export const useTerminalStore = defineStore('terminal', () => {
   const terminalOutput = ref('')
   const connectionId = ref(null)
   const persistedSessions = ref({}); // New state for persisted sessions
-  
+
   // SFTP state
   const sftpConnected = ref(false)
   const sftpConnecting = ref(false)
@@ -29,7 +29,7 @@ export const useTerminalStore = defineStore('terminal', () => {
   const hasActiveSession = computed(() => !!activeSession.value)
   const error = computed(() => connectionError.value)
   const getPersistedSessions = computed(() => persistedSessions.value);
-  
+
   // SFTP getters
   const hasSftpConnection = computed(() => sftpConnected.value)
   const sftpConnectingStatus = computed(() => sftpConnecting.value)
@@ -80,7 +80,7 @@ export const useTerminalStore = defineStore('terminal', () => {
 
   const authenticateSocket = async () => {
     const authStore = useAuthStore()
-    
+
     if (!socket.value || !authStore.token) {
       throw new Error('Socket not connected or no auth token')
     }
@@ -123,11 +123,11 @@ export const useTerminalStore = defineStore('terminal', () => {
         activeSession.value = data.session
         connectionId.value = data.connectionId
         isConnecting.value = false
-        
+
         // Clean up event listeners
         socket.value.off('connection-established', handleConnectionEstablished)
         socket.value.off('connection-error', handleConnectionError)
-        
+
         resolve(data)
       }
 
@@ -135,11 +135,11 @@ export const useTerminalStore = defineStore('terminal', () => {
         console.error('SSH connection error:', error)
         connectionError.value = error.message
         isConnecting.value = false
-        
+
         // Clean up event listeners
         socket.value.off('connection-established', handleConnectionEstablished)
         socket.value.off('connection-error', handleConnectionError)
-        
+
         reject(new Error(error.message))
       }
 
@@ -229,7 +229,7 @@ export const useTerminalStore = defineStore('terminal', () => {
     // Handle terminal disconnection
     socket.value.on('terminal-disconnected', (data) => {
       console.log('Terminal disconnected:', data)
-      
+
       if (terminal && typeof terminal.write === 'function') {
         terminal.write('\r\n\x1b[31mConnection closed.\x1b[0m\r\n')
       }
@@ -240,7 +240,7 @@ export const useTerminalStore = defineStore('terminal', () => {
     socket.value.on('terminal-error', (error) => {
       console.error('Terminal error:', error)
       connectionError.value = error.message
-      
+
       if (terminal && typeof terminal.write === 'function') {
         terminal.write(`\r\n\x1b[31mError: ${error.message}\x1b[0m\r\n`)
       }
@@ -347,11 +347,11 @@ export const useTerminalStore = defineStore('terminal', () => {
         sftpConnectionId.value = data.connectionId
         sftpConnected.value = true
         sftpConnecting.value = false
-        
+
         // Clean up event listeners
         socket.value.off('sftp-connected', handleConnectionEstablished)
         socket.value.off('sftp-connection-error', handleConnectionError)
-        
+
         resolve(data)
       }
 
@@ -359,11 +359,11 @@ export const useTerminalStore = defineStore('terminal', () => {
         console.error('SFTP connection error:', error)
         sftpConnectionError.value = error.message
         sftpConnecting.value = false
-        
+
         // Clean up event listeners
         socket.value.off('sftp-connected', handleConnectionEstablished)
         socket.value.off('sftp-connection-error', handleConnectionError)
-        
+
         reject(new Error(error.message))
       }
 
@@ -404,22 +404,22 @@ export const useTerminalStore = defineStore('terminal', () => {
         console.log('Directory listed:', result)
         sftpCurrentPath.value = result.path
         sftpDirectoryContents.value = result.files
-        
+
         // Clean up event listeners
         socket.value.off('sftp-directory-listed', handleDirectoryListed)
         socket.value.off('sftp-error', handleError)
-        
+
         resolve(result)
       }
 
       const handleError = (error) => {
         console.error('SFTP error:', error)
         sftpConnectionError.value = error.message
-        
+
         // Clean up event listeners
         socket.value.off('sftp-directory-listed', handleDirectoryListed)
         socket.value.off('sftp-error', handleError)
-        
+
         reject(new Error(error.message))
       }
 
@@ -452,16 +452,16 @@ export const useTerminalStore = defineStore('terminal', () => {
         status: 'starting',
         error: null
       }
-      
+
       // Add to transfers list
       sftpTransfers.value.push(transfer)
-      
+
       socket.value.emit('sftp-download-file', { remotePath, localPath })
 
       // Handle progress updates
       socket.value.on('sftp-download-progress', (progress) => {
         if (progress.transferId !== transferId) return
-        
+
         const index = sftpTransfers.value.findIndex(t => t.id === transferId)
         if (index !== -1) {
           sftpTransfers.value[index].progress = progress.percentage
@@ -471,35 +471,35 @@ export const useTerminalStore = defineStore('terminal', () => {
 
       const handleComplete = (result) => {
         console.log('Download complete:', result)
-        
+
         const index = sftpTransfers.value.findIndex(t => t.id === transferId)
         if (index !== -1) {
           sftpTransfers.value[index].progress = 100
           sftpTransfers.value[index].status = 'complete'
         }
-        
+
         // Clean up event listeners
         socket.value.off('sftp-download-complete', handleComplete)
         socket.value.off('sftp-download-error', handleError)
         socket.value.off('sftp-error', handleError)
-        
+
         resolve(result)
       }
 
       const handleError = (error) => {
         console.error('Download error:', error)
-        
+
         const index = sftpTransfers.value.findIndex(t => t.id === transferId)
         if (index !== -1) {
           sftpTransfers.value[index].status = 'error'
           sftpTransfers.value[index].error = error.message
         }
-        
+
         // Clean up event listeners
         socket.value.off('sftp-download-complete', handleComplete)
         socket.value.off('sftp-download-error', handleError)
         socket.value.off('sftp-error', handleError)
-        
+
         reject(new Error(error.message))
       }
 
@@ -526,16 +526,16 @@ export const useTerminalStore = defineStore('terminal', () => {
         status: 'starting',
         error: null
       }
-      
+
       // Add to transfers list
       sftpTransfers.value.push(transfer)
-      
+
       socket.value.emit('sftp-upload-file', { localPath, remotePath })
 
       // Handle progress updates
       socket.value.on('sftp-upload-progress', (progress) => {
         if (progress.transferId !== transferId) return
-        
+
         const index = sftpTransfers.value.findIndex(t => t.id === transferId)
         if (index !== -1) {
           sftpTransfers.value[index].progress = progress.percentage
@@ -545,35 +545,35 @@ export const useTerminalStore = defineStore('terminal', () => {
 
       const handleComplete = (result) => {
         console.log('Upload complete:', result)
-        
+
         const index = sftpTransfers.value.findIndex(t => t.id === transferId)
         if (index !== -1) {
           sftpTransfers.value[index].progress = 100
           sftpTransfers.value[index].status = 'complete'
         }
-        
+
         // Clean up event listeners
         socket.value.off('sftp-upload-complete', handleComplete)
         socket.value.off('sftp-upload-error', handleError)
         socket.value.off('sftp-error', handleError)
-        
+
         resolve(result)
       }
 
       const handleError = (error) => {
         console.error('Upload error:', error)
-        
+
         const index = sftpTransfers.value.findIndex(t => t.id === transferId)
         if (index !== -1) {
           sftpTransfers.value[index].status = 'error'
           sftpTransfers.value[index].error = error.message
         }
-        
+
         // Clean up event listeners
         socket.value.off('sftp-upload-complete', handleComplete)
         socket.value.off('sftp-upload-error', handleError)
         socket.value.off('sftp-error', handleError)
-        
+
         reject(new Error(error.message))
       }
 
@@ -593,21 +593,21 @@ export const useTerminalStore = defineStore('terminal', () => {
 
       const handleSuccess = (result) => {
         console.log('Directory created:', result)
-        
+
         // Clean up event listeners
         socket.value.off('sftp-directory-created', handleSuccess)
         socket.value.off('sftp-error', handleError)
-        
+
         resolve(result)
       }
 
       const handleError = (error) => {
         console.error('Create directory error:', error)
-        
+
         // Clean up event listeners
         socket.value.off('sftp-directory-created', handleSuccess)
         socket.value.off('sftp-error', handleError)
-        
+
         reject(new Error(error.message))
       }
 
@@ -626,21 +626,21 @@ export const useTerminalStore = defineStore('terminal', () => {
 
       const handleSuccess = (result) => {
         console.log('File deleted:', result)
-        
+
         // Clean up event listeners
         socket.value.off('sftp-file-deleted', handleSuccess)
         socket.value.off('sftp-error', handleError)
-        
+
         resolve(result)
       }
 
       const handleError = (error) => {
         console.error('Delete file error:', error)
-        
+
         // Clean up event listeners
         socket.value.off('sftp-file-deleted', handleSuccess)
         socket.value.off('sftp-error', handleError)
-        
+
         reject(new Error(error.message))
       }
 
@@ -659,21 +659,21 @@ export const useTerminalStore = defineStore('terminal', () => {
 
       const handleSuccess = (result) => {
         console.log('Directory deleted:', result)
-        
+
         // Clean up event listeners
         socket.value.off('sftp-directory-deleted', handleSuccess)
         socket.value.off('sftp-error', handleError)
-        
+
         resolve(result)
       }
 
       const handleError = (error) => {
         console.error('Delete directory error:', error)
-        
+
         // Clean up event listeners
         socket.value.off('sftp-directory-deleted', handleSuccess)
         socket.value.off('sftp-error', handleError)
-        
+
         reject(new Error(error.message))
       }
 
@@ -692,25 +692,156 @@ export const useTerminalStore = defineStore('terminal', () => {
 
       const handleSuccess = (result) => {
         console.log('File renamed:', result)
-        
+
         // Clean up event listeners
         socket.value.off('sftp-file-renamed', handleSuccess)
         socket.value.off('sftp-error', handleError)
-        
+
         resolve(result)
       }
 
       const handleError = (error) => {
         console.error('Rename file error:', error)
-        
+
         // Clean up event listeners
         socket.value.off('sftp-file-renamed', handleSuccess)
         socket.value.off('sftp-error', handleError)
-        
+
         reject(new Error(error.message))
       }
 
-      socket.value.on('sftp-file-renamed', handleSuccess)
+      socket.value.on('sftp-error', handleError)
+    })
+  }
+
+  const moveItem = (sourcePath, destPath) => {
+    if (!socket.value?.connected || !sftpConnected.value) {
+      return Promise.reject(new Error('SFTP not connected'))
+    }
+
+    return new Promise((resolve, reject) => {
+      socket.value.emit('sftp-move-item', { sourcePath, destPath })
+
+      const handleSuccess = (result) => {
+        console.log('Item moved:', result)
+
+        // Clean up event listeners
+        socket.value.off('sftp-item-moved', handleSuccess)
+        socket.value.off('sftp-error', handleError)
+
+        resolve(result)
+      }
+
+      const handleError = (error) => {
+        console.error('Move item error:', error)
+
+        // Clean up event listeners
+        socket.value.off('sftp-item-moved', handleSuccess)
+        socket.value.off('sftp-error', handleError)
+
+        reject(new Error(error.message))
+      }
+
+      socket.value.on('sftp-item-moved', handleSuccess)
+      socket.value.on('sftp-error', handleError)
+    })
+  }
+
+  const copyItem = (sourcePath, destPath) => {
+    if (!socket.value?.connected || !sftpConnected.value) {
+      return Promise.reject(new Error('SFTP not connected'))
+    }
+
+    return new Promise((resolve, reject) => {
+      socket.value.emit('sftp-copy-item', { sourcePath, destPath })
+
+      const handleSuccess = (result) => {
+        console.log('Item copied:', result)
+
+        // Clean up event listeners
+        socket.value.off('sftp-item-copied', handleSuccess)
+        socket.value.off('sftp-error', handleError)
+
+        resolve(result)
+      }
+
+      const handleError = (error) => {
+        console.error('Copy item error:', error)
+
+        // Clean up event listeners
+        socket.value.off('sftp-item-copied', handleSuccess)
+        socket.value.off('sftp-error', handleError)
+
+        reject(new Error(error.message))
+      }
+
+      socket.value.on('sftp-item-copied', handleSuccess)
+      socket.value.on('sftp-error', handleError)
+    })
+  }
+
+  const archiveItem = (sourcePath, archiveName, type) => {
+    if (!socket.value?.connected || !sftpConnected.value) {
+      return Promise.reject(new Error('SFTP not connected'))
+    }
+
+    return new Promise((resolve, reject) => {
+      socket.value.emit('sftp-archive-item', { sourcePath, archiveName, type })
+
+      const handleSuccess = (result) => {
+        console.log('Item archived:', result)
+
+        // Clean up event listeners
+        socket.value.off('sftp-item-archived', handleSuccess)
+        socket.value.off('sftp-error', handleError)
+
+        resolve(result)
+      }
+
+      const handleError = (error) => {
+        console.error('Archive item error:', error)
+
+        // Clean up event listeners
+        socket.value.off('sftp-item-archived', handleSuccess)
+        socket.value.off('sftp-error', handleError)
+
+        reject(new Error(error.message))
+      }
+
+      socket.value.on('sftp-item-archived', handleSuccess)
+      socket.value.on('sftp-error', handleError)
+    })
+  }
+
+  const extractItem = (sourcePath, type) => {
+    if (!socket.value?.connected || !sftpConnected.value) {
+      return Promise.reject(new Error('SFTP not connected'))
+    }
+
+    return new Promise((resolve, reject) => {
+      socket.value.emit('sftp-extract-item', { sourcePath, type })
+
+      const handleSuccess = (result) => {
+        console.log('Item extracted:', result)
+
+        // Clean up event listeners
+        socket.value.off('sftp-item-extracted', handleSuccess)
+        socket.value.off('sftp-error', handleError)
+
+        resolve(result)
+      }
+
+      const handleError = (error) => {
+        console.error('Extract item error:', error)
+
+        // Clean up event listeners
+        socket.value.off('sftp-item-extracted', handleSuccess)
+        socket.value.off('sftp-error', handleError)
+
+        reject(new Error(error.message))
+      }
+
+      socket.value.on('sftp-item-extracted', handleSuccess)
       socket.value.on('sftp-error', handleError)
     })
   }
@@ -766,7 +897,7 @@ export const useTerminalStore = defineStore('terminal', () => {
     terminalOutput,
     connectionId,
     persistedSessions, // Export new state
-    
+
     // SFTP state
     sftpConnected,
     sftpConnecting,
@@ -775,14 +906,14 @@ export const useTerminalStore = defineStore('terminal', () => {
     sftpCurrentPath,
     sftpDirectoryContents,
     sftpTransfers,
-    
+
     // Getters
     socketConnected,
     connecting,
     hasActiveSession,
     error,
     getPersistedSessions, // Export new getter
-    
+
     // SFTP getters
     hasSftpConnection,
     sftpConnectingStatus,
@@ -790,7 +921,7 @@ export const useTerminalStore = defineStore('terminal', () => {
     currentDirectory,
     directoryContents,
     activeTransfers,
-    
+
     // Terminal actions
     connectSocket,
     authenticateSocket,
@@ -807,7 +938,7 @@ export const useTerminalStore = defineStore('terminal', () => {
     init,
     persistSession, // Export new action
     reattachToSession, // Export new action
-    
+
     // SFTP actions
     connectToSftp,
     disconnectSftp,
@@ -817,7 +948,12 @@ export const useTerminalStore = defineStore('terminal', () => {
     createDirectory,
     deleteFile,
     deleteDirectory,
+    deleteDirectory,
     renameFile,
+    moveItem,
+    copyItem,
+    archiveItem,
+    extractItem,
     clearSftpError,
     setupSftpListeners
   }
