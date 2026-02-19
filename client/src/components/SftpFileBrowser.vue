@@ -31,7 +31,7 @@
           @click="disconnectSftp" 
           class="px-3 py-1 bg-slate-600 hover:bg-slate-700 text-white text-xs rounded-md shadow-sm transition-colors"
         >
-          {{ $t('message.disconnected') }}
+          {{ $t('message.sftp_disconnected') }}
         </button>
       </div>
     </div>

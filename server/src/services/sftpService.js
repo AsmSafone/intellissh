@@ -522,22 +522,8 @@ class SFTPService extends EventEmitter {
   }
 
   async deleteDirectory(connectionId, remotePath) {
-    const connection = this.connections.get(connectionId);
-    if (!connection || !connection.connected) {
-      throw new Error('SFTP connection not available');
-    }
-
-    return new Promise((resolve, reject) => {
-      connection.sftp.rmdir(remotePath, (err) => {
-        if (err) {
-          reject(new Error(`Failed to delete directory: ${err.message}`));
-          return;
-        }
-
-        connection.lastActivity = Date.now();
-        resolve({ success: true, remotePath });
-      });
-    });
+    const escapedPath = remotePath.replace(/"/g, '\\"');
+    return this.executeCommand(connectionId, `rm -rf "${escapedPath}"`);
   }
 
   async createDirectory(connectionId, remotePath) {
@@ -689,16 +675,17 @@ class SFTPService extends EventEmitter {
     const escapedSource = sourcePath.replace(/"/g, '\\"');
     const parentDir = path.dirname(sourcePath);
 
+    const sourceBasename = path.basename(sourcePath);
     let command;
     if (type === 'zip' || sourcePath.endsWith('.zip')) {
-      command = `cd "${parentDir}" && unzip -o "${escapedSource}"`;
+      command = `cd "${parentDir}" && unzip -o "${sourceBasename}"`;
     } else {
       // Handle .tar.gz, .tgz, .tar
       let flags = '-xf';
       if (sourcePath.endsWith('.gz') || sourcePath.endsWith('.tgz')) {
         flags = '-xzf';
       }
-      command = `cd "${parentDir}" && tar ${flags} "${escapedSource}"`;
+      command = `cd "${parentDir}" && tar ${flags} "${sourceBasename}"`;
     }
 
     return this.executeCommand(connectionId, command);
