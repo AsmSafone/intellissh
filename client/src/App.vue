@@ -91,6 +91,120 @@
               </button>
             </div>
           </div>
+            <!-- Mobile menu button -->
+            <div class="flex sm:hidden items-center ml-4">
+              <button
+                @click="showMobileMenu = !showMobileMenu"
+                class="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                aria-expanded="false"
+              >
+                <span class="sr-only">Open main menu</span>
+                <svg
+                  v-if="!showMobileMenu"
+                  class="block h-6 w-6"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <svg
+                  v-else
+                  class="block h-6 w-6"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Menu (Slide-over) -->
+        <div v-if="showMobileMenu" class="sm:hidden absolute inset-x-0 top-16 bg-white dark:bg-slate-800 shadow-lg border-b border-slate-200 dark:border-slate-700 z-50 animate-fade-in-down">
+          <div class="pt-2 pb-3 space-y-1">
+            <router-link
+              to="/"
+              class="block px-3 py-2 text-base font-medium border-l-4 transition-colors"
+              :class="$route.name === 'home' 
+                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 text-indigo-700 dark:text-indigo-300' 
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600'"
+              @click="showMobileMenu = false"
+            >
+              {{ $t('message.ssh_sessions') }}
+            </router-link>
+            <router-link
+              to="/credentials"
+              class="block px-3 py-2 text-base font-medium border-l-4 transition-colors"
+              :class="$route.name === 'credentials' 
+                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 text-indigo-700 dark:text-indigo-300' 
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600'"
+              @click="showMobileMenu = false"
+            >
+              {{ $t('message.credential_management') }}
+            </router-link>
+            <router-link
+              to="/settings"
+              class="block px-3 py-2 text-base font-medium border-l-4 transition-colors"
+              :class="$route.name === 'settings' 
+                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 text-indigo-700 dark:text-indigo-300' 
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600'"
+              @click="showMobileMenu = false"
+            >
+              {{ $t('message.settings') }}
+            </router-link>
+            <router-link
+              to="/profile"
+              class="block px-3 py-2 text-base font-medium border-l-4 transition-colors"
+              :class="$route.name === 'profile' 
+                ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 text-indigo-700 dark:text-indigo-300' 
+                : 'border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600'"
+              @click="showMobileMenu = false"
+            >
+              {{ $t('message.user_profile') }}
+            </router-link>
+          </div>
+          <div class="pt-4 pb-4 border-t border-slate-200 dark:border-slate-700">
+            <div class="flex items-center px-4">
+              <div class="flex-shrink-0">
+                <div class="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold">
+                  {{ authStore.currentUser?.username?.charAt(0).toUpperCase() }}
+                </div>
+              </div>
+              <div class="ml-3">
+                <div class="text-base font-medium text-slate-800 dark:text-white">{{ authStore.currentUser?.username }}</div>
+                <div class="text-sm font-medium text-slate-500 dark:text-slate-400">User</div>
+              </div>
+              <button
+                @click="handleLogout"
+                class="ml-auto flex-shrink-0 bg-white dark:bg-slate-800 p-1 rounded-full text-slate-400 hover:text-slate-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <span class="sr-only">{{ $t('message.logout') }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+            
+            <div class="mt-3 px-2 space-y-1">
+              <!-- Mobile Language Switcher -->
+               <div class="px-3 py-2">
+                 <LanguageSwitcher />
+               </div>
+               
+               <!-- Mobile Dark Mode Toggle -->
+               <div class="px-3 py-2 flex items-center justify-between text-slate-600 dark:text-slate-400">
+                 <span>Appearance</span>
+                 <DarkModeToggle />
+               </div>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
@@ -162,6 +276,7 @@ const showGlobalLoading = ref(false)
 const loadingMessage = ref('')
 const globalError = ref('')
 const appVersion = ref(APP_VERSION)
+const showMobileMenu = ref(false)
 
 // Computed
 const translatedHello = computed(() => t('message.hello'))

@@ -179,31 +179,7 @@
         @contextmenu.prevent="handleContextMenu"
       ></div>
       
-      <!-- Context Menu for Copy/Paste -->
-      <div
-        v-show="contextMenuVisible"
-        class="absolute bg-slate-800 border border-slate-700 rounded shadow-lg z-50 py-1"
-        :style="`top: ${contextMenuY}px; left: ${contextMenuX}px;`"
-      >
-        <button
-          class="w-full text-left px-4 py-2 text-white hover:bg-slate-700 text-sm flex items-center"
-          @click="copySelectedText"
-        >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2" />
-          </svg>
-          {{ $t('message.copy') }}
-        </button>
-        <button
-          class="w-full text-left px-4 py-2 text-white hover:bg-slate-700 text-sm flex items-center"
-          @click="pasteFromClipboard"
-        >
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          {{ $t('message.paste') }}
-        </button>
-      </div>
+
       </div>
 
       <!-- LLM Helper Sidebar -->
@@ -369,11 +345,7 @@ const hardRedirect = () => {
   window.location.href = '/'
 }
 
-// Context menu for copy/paste
-const contextMenuVisible = ref(false)
-const contextMenuX = ref(0)
-const contextMenuY = ref(0)
-const selectedText = ref('')
+// Lifecycle
 
 const initializeTerminal = () => {
   if (terminal.value) {
@@ -625,39 +597,26 @@ watch(() => route.params.sessionId, async (newSessionId, oldSessionId) => {
 const handleContextMenu = (event) => {
   if (!terminal.value) return
   
-  // Position the context menu
-  contextMenuX.value = event.clientX
-  contextMenuY.value = event.clientY
-  
   // Get selected text from terminal if any
-  selectedText.value = terminal.value.getSelection()
+  const selection = terminal.value.getSelection()
   
-  // Show the context menu
-  contextMenuVisible.value = true
-  
-  // Add event listener to close the context menu when clicking elsewhere
-  document.addEventListener('click', closeContextMenu)
-}
-
-const closeContextMenu = () => {
-  contextMenuVisible.value = false
-  document.removeEventListener('click', closeContextMenu)
-}
-
-const copySelectedText = () => {
-  if (selectedText.value) {
-    navigator.clipboard.writeText(selectedText.value)
+  if (selection) {
+    // If there is a selection, copy it to clipboard immediately
+    navigator.clipboard.writeText(selection)
       .then(() => {
         console.log(t('message.text_copied'))
+        // Clear selection after copy to indicate success
+        terminal.value.clearSelection() 
       })
       .catch(err => {
         console.error(t('message.failed_to_copy'), err)
       })
+      
+    // Prevent default context menu
+    return
   }
-  closeContextMenu()
-}
-
-const pasteFromClipboard = () => {
+  
+  // If no selection, paste from clipboard
   navigator.clipboard.readText()
     .then(text => {
       if (text && terminal.value) {
@@ -667,8 +626,9 @@ const pasteFromClipboard = () => {
     .catch(err => {
       console.error(t('message.failed_to_paste'), err)
     })
-  closeContextMenu()
 }
+
+
 
 const handleKeydown = (e) => {
   // Only process if terminal is focused
@@ -714,7 +674,6 @@ onMounted(async () => {
 onUnmounted(() => {
   // Clean up
   window.removeEventListener('resize', handleResize)
-  document.removeEventListener('click', closeContextMenu)
   document.removeEventListener('keydown', handleKeydown)
 
   // console.log('TerminalView: onUnmounted - Starting dispose operations.');

@@ -53,6 +53,15 @@
           @click.prevent="setLanguage('zh-CN')"
           >简体中文</a
         >
+        <a
+          href="#"
+          class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100"
+          role="menuitem"
+          tabindex="-1"
+          id="menu-item-2"
+          @click.prevent="setLanguage('bn')"
+          >বাংলা</a
+        >
       </div>
     </div>
   </div>
@@ -71,6 +80,8 @@ const currentLanguageDisplay = computed(() => {
       return 'English'
     case 'zh-CN':
       return '简体中文'
+    case 'bn':
+      return 'বাংলা'
     default:
       return 'English'
   }
