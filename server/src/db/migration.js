@@ -129,7 +129,7 @@ async function runMigration() {
 }
 
 async function createAdminUserIfNeeded() {
-  const adminUser = await db.get('SELECT * FROM users WHERE role = "admin"');
+  const adminUser = await db.get("SELECT * FROM users WHERE role = 'admin'");
 
   if (!adminUser) {
     console.log('No admin user found. Creating initial admin account...');
@@ -163,8 +163,8 @@ Please log in and change this password immediately!
     } else {
       // There are existing users but no admin
       // Let's promote the first user to admin
-      await db.run('UPDATE users SET role = "admin" WHERE id = (SELECT MIN(id) FROM users)');
-      const promotedUser = await db.get('SELECT username FROM users WHERE role = "admin"');
+      await db.run("UPDATE users SET role = 'admin' WHERE id = (SELECT MIN(id) FROM users)");
+      const promotedUser = await db.get("SELECT username FROM users WHERE role = 'admin'");
       console.log(`Promoted user '${promotedUser.username}' to admin role.`);
     }
   } else {
@@ -176,7 +176,7 @@ async function addRegistrationControlSetting() {
   console.log('Checking settings categories...');
 
   // Check if registration_enabled setting exists
-  const registrationSetting = await db.get('SELECT id, category FROM settings WHERE id = "registration_enabled"');
+  const registrationSetting = await db.get("SELECT id, category FROM settings WHERE id = 'registration_enabled'");
 
   if (!registrationSetting) {
     console.log('Registration setting not found. Adding registration control setting...');
@@ -190,7 +190,7 @@ async function addRegistrationControlSetting() {
     // Update category if it's in security
     if (registrationSetting.category === 'security') {
       console.log('Updating registration_enabled setting category from security to server...');
-      await db.run('UPDATE settings SET category = "server" WHERE id = "registration_enabled"');
+      await db.run("UPDATE settings SET category = 'server' WHERE id = 'registration_enabled'");
       console.log('Registration setting category updated to server.');
     } else {
       console.log('Registration setting already in correct category. No update needed.');
@@ -198,14 +198,14 @@ async function addRegistrationControlSetting() {
   }
 
   // Also check if JWT expiration setting needs to be moved to server category
-  const jwtSetting = await db.get('SELECT id, category FROM settings WHERE id = "jwt_expires_in"');
+  const jwtSetting = await db.get("SELECT id, category FROM settings WHERE id = 'jwt_expires_in'");
   if (!jwtSetting) {
     console.log('JWT expiration setting not found.');
   } else {
     console.log(`JWT expiration setting exists in category: ${jwtSetting.category}`);
     if (jwtSetting.category === 'security') {
       console.log('Updating jwt_expires_in setting category from security to server...');
-      await db.run('UPDATE settings SET category = "server" WHERE id = "jwt_expires_in"');
+      await db.run("UPDATE settings SET category = 'server' WHERE id = 'jwt_expires_in'");
       console.log('JWT expiration setting category updated to server.');
     } else {
       console.log('JWT expiration setting already in correct category. No update needed.');
@@ -213,7 +213,7 @@ async function addRegistrationControlSetting() {
   }
 
   // Verify the current categories of both settings
-  const settingsAfterUpdate = await db.all('SELECT id, category FROM settings WHERE id IN ("registration_enabled", "jwt_expires_in")');
+  const settingsAfterUpdate = await db.all("SELECT id, category FROM settings WHERE id IN ('registration_enabled', 'jwt_expires_in')");
   console.log('Current setting categories after updates:');
   settingsAfterUpdate.forEach(setting => {
     console.log(`- ${setting.id}: ${setting.category}`);

@@ -136,7 +136,7 @@ class Database {
   }
 
   async createAdminUserIfNeeded() {
-    const adminUser = await this.get('SELECT * FROM users WHERE role = "admin"');
+    const adminUser = await this.get("SELECT * FROM users WHERE role = 'admin'");
 
     if (!adminUser) {
       console.log('No admin user found. Creating initial admin account...');
@@ -173,8 +173,8 @@ Please log in and change this password immediately!
       } else {
         // There are existing users but no admin
         // Let's promote the first user to admin
-        await this.run('UPDATE users SET role = "admin" WHERE id = (SELECT MIN(id) FROM users)');
-        const promotedUser = await this.get('SELECT username FROM users WHERE role = "admin"');
+        await this.run("UPDATE users SET role = 'admin' WHERE id = (SELECT MIN(id) FROM users)");
+        const promotedUser = await this.get("SELECT username FROM users WHERE role = 'admin'");
         console.log(`Promoted user '${promotedUser.username}' to admin role.`);
       }
     } else {
