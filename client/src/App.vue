@@ -123,8 +123,7 @@
                 </svg>
               </button>
             </div>
-          </div>
-        </div>
+
 
         <!-- Mobile Menu (Slide-over) -->
         <div v-if="showMobileMenu" class="sm:hidden absolute inset-x-0 top-16 bg-white dark:bg-slate-800 shadow-lg border-b border-slate-200 dark:border-slate-700 z-50 animate-fade-in-down">
