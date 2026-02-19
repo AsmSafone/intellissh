@@ -86,38 +86,39 @@ class Database {
 
   async insertDefaultSettings() {
     // Default settings from .env.example values
+    // Default settings from .env.example values
     const defaultSettings = [
       // LLM Helper settings
-      { id: 'llm_provider', name: 'LLM Provider', value: 'openai', category: 'llm', description: 'LLM provider (openai, ollama, or custom)', is_sensitive: 0 },
-      { id: 'openai_api_key', name: 'OpenAI API Key', value: '', category: 'llm', description: 'API key for OpenAI', is_sensitive: 1 },
-      { id: 'openai_model', name: 'OpenAI Model', value: 'gpt-3.5-turbo', category: 'llm', description: 'Model name for OpenAI', is_sensitive: 0 },
-      { id: 'ollama_url', name: 'Ollama URL', value: 'http://localhost:11434', category: 'llm', description: 'URL for Ollama API', is_sensitive: 0 },
-      { id: 'ollama_model', name: 'Ollama Model', value: 'llama2', category: 'llm', description: 'Model name for Ollama', is_sensitive: 0 },
-      { id: 'custom_api_url', name: 'Custom API URL', value: '', category: 'llm', description: 'Base URL for custom OpenAI-compatible API', is_sensitive: 0 },
-      { id: 'custom_api_key', name: 'Custom API Key', value: '', category: 'llm', description: 'API key for custom OpenAI-compatible API', is_sensitive: 1 },
-      { id: 'custom_model', name: 'Custom Model', value: 'gpt-3.5-turbo', category: 'llm', description: 'Model name for custom API', is_sensitive: 0 },
+      { id: 'llm_provider', name: 'LLM Provider', value: 'openai', category: 'llm', description: 'LLM provider (openai, ollama, or custom)', is_sensitive: false },
+      { id: 'openai_api_key', name: 'OpenAI API Key', value: '', category: 'llm', description: 'API key for OpenAI', is_sensitive: true },
+      { id: 'openai_model', name: 'OpenAI Model', value: 'gpt-3.5-turbo', category: 'llm', description: 'Model name for OpenAI', is_sensitive: false },
+      { id: 'ollama_url', name: 'Ollama URL', value: 'http://localhost:11434', category: 'llm', description: 'URL for Ollama API', is_sensitive: false },
+      { id: 'ollama_model', name: 'Ollama Model', value: 'llama2', category: 'llm', description: 'Model name for Ollama', is_sensitive: false },
+      { id: 'custom_api_url', name: 'Custom API URL', value: '', category: 'llm', description: 'Base URL for custom OpenAI-compatible API', is_sensitive: false },
+      { id: 'custom_api_key', name: 'Custom API Key', value: '', category: 'llm', description: 'API key for custom OpenAI-compatible API', is_sensitive: true },
+      { id: 'custom_model', name: 'Custom Model', value: 'gpt-3.5-turbo', category: 'llm', description: 'Model name for custom API', is_sensitive: false },
 
       // Encryption settings
-      { id: 'encryption_key', name: 'Encryption Key', value: '736f4149702aae82ab6e45e64d977e3c6c1e9f7b29b368f61cafab1b9c2cc3b2', category: 'security', description: 'Encryption key for sensitive data', is_sensitive: 1 },
+      { id: 'encryption_key', name: 'Encryption Key', value: '736f4149702aae82ab6e45e64d977e3c6c1e9f7b29b368f61cafab1b9c2cc3b2', category: 'security', description: 'Encryption key for sensitive data', is_sensitive: true },
 
       // Server settings
-      { id: 'cors_origin', name: 'CORS Origin', value: 'http://localhost:8080', category: 'server', description: 'Allowed CORS origin', is_sensitive: 0 },
-      { id: 'rate_limit_window_ms', name: 'Rate Limit Window', value: '900000', category: 'server', description: 'Rate limit window in milliseconds', is_sensitive: 0 },
-      { id: 'rate_limit_max_requests', name: 'Rate Limit Max Requests', value: '100', category: 'server', description: 'Maximum requests per rate limit window', is_sensitive: 0 },
-      { id: 'site_name', name: 'Site Name', value: 'IntelliSSH', category: 'server', description: 'Name of the site for emails and UI', is_sensitive: 0 },
+      { id: 'cors_origin', name: 'CORS Origin', value: 'http://localhost:8080', category: 'server', description: 'Allowed CORS origin', is_sensitive: false },
+      { id: 'rate_limit_window_ms', name: 'Rate Limit Window', value: '900000', category: 'server', description: 'Rate limit window in milliseconds', is_sensitive: false },
+      { id: 'rate_limit_max_requests', name: 'Rate Limit Max Requests', value: '100', category: 'server', description: 'Maximum requests per rate limit window', is_sensitive: false },
+      { id: 'site_name', name: 'Site Name', value: 'IntelliSSH', category: 'server', description: 'Name of the site for emails and UI', is_sensitive: false },
 
       // Authentication settings (admin only - global server settings)
-      { id: 'jwt_expires_in', name: 'JWT Expiration', value: '24h', category: 'server', description: 'JWT token expiration time', is_sensitive: 0 },
+      { id: 'jwt_expires_in', name: 'JWT Expiration', value: '24h', category: 'server', description: 'JWT token expiration time', is_sensitive: false },
 
       // Registration control (admin only - global server settings)
-      { id: 'registration_enabled', name: 'Enable Registration', value: 'true', category: 'server', description: 'Allow new users to register', is_sensitive: 0 },
+      { id: 'registration_enabled', name: 'Enable Registration', value: 'true', category: 'server', description: 'Allow new users to register', is_sensitive: false },
 
       // Email settings
-      { id: 'smtp_host', name: 'SMTP Host', value: '', category: 'email', description: 'SMTP server hostname', is_sensitive: 0 },
-      { id: 'smtp_port', name: 'SMTP Port', value: '587', category: 'email', description: 'SMTP server port', is_sensitive: 0 },
-      { id: 'smtp_user', name: 'SMTP Username', value: '', category: 'email', description: 'SMTP server username', is_sensitive: 0 },
-      { id: 'smtp_password', name: 'SMTP Password', value: '', category: 'email', description: 'SMTP server password', is_sensitive: 1 },
-      { id: 'email_from', name: 'From Email', value: 'noreply@webssh.example.com', category: 'email', description: 'Email address used as sender', is_sensitive: 0 }
+      { id: 'smtp_host', name: 'SMTP Host', value: '', category: 'email', description: 'SMTP server hostname', is_sensitive: false },
+      { id: 'smtp_port', name: 'SMTP Port', value: '587', category: 'email', description: 'SMTP server port', is_sensitive: false },
+      { id: 'smtp_user', name: 'SMTP Username', value: '', category: 'email', description: 'SMTP server username', is_sensitive: false },
+      { id: 'smtp_password', name: 'SMTP Password', value: '', category: 'email', description: 'SMTP server password', is_sensitive: true },
+      { id: 'email_from', name: 'From Email', value: 'noreply@webssh.example.com', category: 'email', description: 'Email address used as sender', is_sensitive: false }
     ];
 
     // Insert each setting
@@ -246,6 +247,8 @@ Please log in and change this password immediately!
       )
     `;
 
+    const BOOL_FALSE = this.type === 'postgres' ? 'FALSE' : '0';
+
     const createSettingsTable = `
       CREATE TABLE IF NOT EXISTS settings (
         id TEXT PRIMARY KEY,
@@ -253,7 +256,7 @@ Please log in and change this password immediately!
         value TEXT NOT NULL,
         category TEXT NOT NULL,
         description TEXT,
-        is_sensitive BOOLEAN DEFAULT 0,
+        is_sensitive BOOLEAN DEFAULT ${BOOL_FALSE},
         updated_at ${TIMESTAMP_TYPE} DEFAULT CURRENT_TIMESTAMP
       )
     `;
