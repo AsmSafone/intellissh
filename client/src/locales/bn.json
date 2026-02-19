@@ -380,6 +380,19 @@
     "registration_setting_value_after_direct_save": "সরাসরি সংরক্ষণের পর রেজিস্ট্রেশন সেটিং মান: {regValue}",
     "direct_api_response": "সরাসরি API উত্তর:",
     "public_reset_response": "পাবলিক রিসেট উত্তর:",
-    "api_test_response": "API টেস্ট উত্তর:"
+    "api_test_response": "API টেস্ট উত্তর:",
+    "rename": "নাম পরিবর্তন",
+    "move": "সরান",
+    "extract": "এক্সট্র্যাক্ট",
+    "rename_item": "আইটেমটির নাম পরিবর্তন করুন",
+    "new_name": "নতুন নাম",
+    "copy_item": "আইটেম কপি করুন",
+    "move_item": "আইটেম সরান",
+    "destination_path": "গন্তব্য পথ",
+    "destination_path_hint": "গন্তব্যের পথ দিন (যেমন /home/user/folder)",
+    "archive_item": "আর্কাইভ আইটেম",
+    "archive_name": "আর্কাইভের নাম",
+    "archive_type": "আর্কাইভের ধরন",
+    "new_directory": "নতুন ডিরেক্টরি"
   }
 }

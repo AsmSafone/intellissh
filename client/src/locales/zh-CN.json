@@ -380,6 +380,19 @@
     "registration_setting_value_after_direct_save": "直接保存后的注册设置值: {regValue}",
     "direct_api_response": "直接 API 响应:",
     "public_reset_response": "公共重置响应:",
-    "api_test_response": "API 测试响应:"
+    "api_test_response": "API 测试响应:",
+    "rename": "重命名",
+    "move": "移动",
+    "extract": "解压",
+    "rename_item": "重命名项目",
+    "new_name": "新名称",
+    "copy_item": "复制项目",
+    "move_item": "移动项目",
+    "destination_path": "目标路径",
+    "destination_path_hint": "输入目标路径 (例如 /home/user/folder)",
+    "archive_item": "归档项目",
+    "archive_name": "归档名称",
+    "archive_type": "归档类型",
+    "new_directory": "新建文件夹"
   }
 }

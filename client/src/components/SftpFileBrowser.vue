@@ -150,33 +150,105 @@
           />
         </label>
         
-        <button
+        <button 
           @click="showCreateDirectoryDialog = true"
           class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded transition-colors flex items-center"
+          :title="$t('message.new_directory')"
         >
           <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
           </svg>
-          {{ $t('message.new_folder') }}
+          {{ $t('message.new_directory') }}
         </button>
-        
-        <button v-if="selectedItem" 
+
+        <div class="w-px bg-slate-600 mx-1"></div>
+
+        <button 
+          @click="openRenameDialog"
+          :disabled="!selectedItem"
+          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-slate-600': selectedItem}"
+          class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
+          :title="$t('message.rename')"
+        >
+          <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          {{ $t('message.rename') }}
+        </button>
+
+        <button 
+          @click="openCopyDialog"
+          :disabled="!selectedItem"
+          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-slate-600': selectedItem}"
+          class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
+          :title="$t('message.copy')"
+        >
+          <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          {{ $t('message.copy') }}
+        </button>
+
+        <button 
+          @click="openMoveDialog"
+          :disabled="!selectedItem"
+          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-slate-600': selectedItem}"
+          class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
+          :title="$t('message.move')"
+        >
+          <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          </svg>
+          {{ $t('message.move') }}
+        </button>
+
+        <button 
+          @click="openArchiveDialog"
+          :disabled="!selectedItem"
+          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-slate-600': selectedItem}"
+          class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
+          :title="$t('message.archive')"
+        >
+          <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+          </svg>
+          {{ $t('message.archive') }}
+        </button>
+
+        <button 
+          @click="performExtract"
+          :disabled="!canExtract"
+          :class="{'opacity-50 cursor-not-allowed': !canExtract, 'hover:bg-slate-600': canExtract}"
+          class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
+          :title="$t('message.extract')"
+        >
+          <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          {{ $t('message.extract') }}
+        </button>
+
+        <div class="w-px bg-slate-600 mx-1"></div>
+
+        <button 
           @click="downloadSelectedItem"
           :disabled="!canDownload"
-          :class="[
-            'px-2 py-1 text-white text-xs rounded transition-colors flex items-center',
-            canDownload ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-800 opacity-50 cursor-not-allowed'
-          ]"
+          :class="{'opacity-50 cursor-not-allowed': !canDownload, 'hover:bg-slate-600': canDownload}"
+          class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
+          :title="$t('message.download')"
         >
           <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           {{ $t('message.download') }}
         </button>
-        
-        <button v-if="selectedItem" 
-          @click="showDeleteDialog = true"
-          class="px-2 py-1 bg-red-900 hover:bg-red-800 text-white text-xs rounded transition-colors flex items-center"
+
+        <button 
+          @click="openDeleteDialog"
+          :disabled="!selectedItem"
+          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-red-900/50': selectedItem}"
+          class="px-2 py-1 bg-slate-700 text-red-300 text-xs rounded transition-colors flex items-center"
+          :title="$t('message.delete')"
         >
           <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

@@ -75,13 +75,17 @@
             </div>
 
             <!-- Dark Mode Toggle -->
-            <DarkModeToggle />
+            <div class="hidden sm:block">
+              <DarkModeToggle />
+            </div>
 
             <!-- Language Switcher -->
-            <LanguageSwitcher />
+            <div class="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
 
             <!-- User Info -->
-            <div class="flex items-center space-x-4">
+            <div class="hidden sm:flex items-center space-x-4">
               <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ authStore.currentUser?.username }}</span>
               <button
                 @click="handleLogout"
