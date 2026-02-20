@@ -33,7 +33,7 @@
 
       <!-- Search and Filters -->
       <div class="px-4 mb-6 sm:px-0">
-        <div class="max-w-lg">
+        <div class="w-full">
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg class="h-5 w-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
