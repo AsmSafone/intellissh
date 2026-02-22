@@ -133,6 +133,7 @@
         <textarea 
           v-model="manualPrompt" 
           placeholder="Ask the assistant for help or suggest a command..." 
+          @keydown.enter.prevent.exact="handleEnter"
           class="w-full p-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-500 transition-all duration-200"
           :disabled="!helperEnabled || isProcessing || !isReady"
           rows="3"
@@ -229,6 +230,12 @@ const sendPrompt = async () => {
   }
 }
 
+const handleEnter = () => {
+  if (helperEnabled.value && manualPrompt.value.trim() && !isProcessing.value && isReady.value) {
+    sendPrompt()
+  }
+}
+
 const clearHelperHistory = () => {
   llmHelperStore.clearHistory()
 }
@@ -303,12 +310,18 @@ onMounted(() => {
   llmHelperStore.setupSocketListeners()
   if (terminalStore.hasActiveSession) {
     llmHelperStore.fetchSettings()
+    if (!llmHelperStore.isEnabled) {
+      llmHelperStore.toggleHelper(true)
+    }
   }
 })
 
 watch(() => terminalStore.hasActiveSession, (hasSession) => {
   if (hasSession) {
     llmHelperStore.fetchSettings()
+    if (!llmHelperStore.isEnabled) {
+      llmHelperStore.toggleHelper(true)
+    }
   } else {
     llmHelperStore.toggleHelper(false)
   }

@@ -521,11 +521,15 @@ const disconnect = async () => {
   
   // Disconnect session
   console.log('Calling terminalStore.disconnectSession()...');
-  await terminalStore.disconnectSession();
-  console.log('Disconnect process initiated.');
-
-  // Redirect to homepage after successful disconnection
-  router.push('/');
+  try {
+    await terminalStore.disconnectSession();
+    console.log('Disconnect process completed.');
+  } catch (err) {
+    console.error('Error during disconnect:', err);
+  } finally {
+    // Redirect to homepage after disconnection attempt
+    router.push('/');
+  }
 };
 
 const handleResize = () => {
