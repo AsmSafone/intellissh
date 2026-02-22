@@ -165,8 +165,8 @@
 
         <button 
           @click="openRenameDialog"
-          :disabled="!selectedItem"
-          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-slate-600': selectedItem}"
+          :disabled="!canRename"
+          :class="{'opacity-50 cursor-not-allowed': !canRename, 'hover:bg-slate-600': canRename}"
           class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
           :title="$t('message.rename')"
         >
@@ -178,8 +178,8 @@
 
         <button 
           @click="openCopyDialog"
-          :disabled="!selectedItem"
-          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-slate-600': selectedItem}"
+          :disabled="!hasSelection"
+          :class="{'opacity-50 cursor-not-allowed': !hasSelection, 'hover:bg-slate-600': hasSelection}"
           class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
           :title="$t('message.copy')"
         >
@@ -191,8 +191,8 @@
 
         <button 
           @click="openMoveDialog"
-          :disabled="!selectedItem"
-          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-slate-600': selectedItem}"
+          :disabled="!hasSelection"
+          :class="{'opacity-50 cursor-not-allowed': !hasSelection, 'hover:bg-slate-600': hasSelection}"
           class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
           :title="$t('message.move')"
         >
@@ -204,8 +204,8 @@
 
         <button 
           @click="openArchiveDialog"
-          :disabled="!selectedItem"
-          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-slate-600': selectedItem}"
+          :disabled="!hasSelection"
+          :class="{'opacity-50 cursor-not-allowed': !hasSelection, 'hover:bg-slate-600': hasSelection}"
           class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
           :title="$t('message.archive')"
         >
@@ -216,7 +216,7 @@
         </button>
 
         <button 
-          @click="performExtract"
+          @click="openExtractDialog"
           :disabled="!canExtract"
           :class="{'opacity-50 cursor-not-allowed': !canExtract, 'hover:bg-slate-600': canExtract}"
           class="px-2 py-1 bg-slate-700 text-white text-xs rounded transition-colors flex items-center"
@@ -245,8 +245,8 @@
 
         <button 
           @click="openDeleteDialog"
-          :disabled="!selectedItem"
-          :class="{'opacity-50 cursor-not-allowed': !selectedItem, 'hover:bg-red-900/50': selectedItem}"
+          :disabled="!hasSelection"
+          :class="{'opacity-50 cursor-not-allowed': !hasSelection, 'hover:bg-red-900/50': hasSelection}"
           class="px-2 py-1 bg-slate-700 text-red-300 text-xs rounded transition-colors flex items-center"
           :title="$t('message.delete')"
         >
@@ -259,28 +259,45 @@
       
       <!-- File List -->
       <div class="flex-1 overflow-auto">
-        <table class="min-w-full border-collapse">
+        <table class="min-w-full divide-y divide-slate-700">
           <thead class="bg-slate-800 sticky top-0 z-10">
             <tr>
-              <th class="py-2 px-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('message.name_table') }}</th>
+              <th scope="col" class="py-2 px-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-8">
+                <input 
+                  type="checkbox" 
+                  :checked="isAllSelected" 
+                  @change="toggleAllSelection($event)" 
+                  class="rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500"
+                />
+              </th>
+              <th scope="col" class="py-2 px-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
+                {{ $t('message.name_table') }}
+              </th>
               <th class="py-2 px-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('message.size_table') }}</th>
               <th class="py-2 px-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('message.modified_table') }}</th>
               <th class="py-2 px-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">{{ $t('message.type_table') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-700 bg-slate-800/50">
-            <tr
-              v-for="item in sortedDirectoryContents"
+            <tr 
+              v-for="item in sortedDirectoryContents" 
               :key="item.filename"
-              @click="selectItem(item)"
+              @click="toggleSelection(item, $event)"
               @dblclick="handleItemDoubleClick(item)"
-              :class="[
-                'cursor-pointer hover:bg-slate-700 transition-colors',
-                selectedItem && selectedItem.filename === item.filename ? 'bg-slate-700' : ''
-              ]"
+              @contextmenu="handleContextMenu($event, item)"
+              class="border-b border-slate-700/50 hover:bg-slate-600/50 cursor-pointer transition-colors"
+              :class="{'bg-indigo-900/40 hover:bg-indigo-900/50': isSelected(item)}"
             >
-              <td class="py-2 px-3 whitespace-nowrap">
-                <div class="flex items-center">
+              <td class="py-2 px-3 whitespace-nowrap w-8" @click.stop>
+                <input 
+                  type="checkbox" 
+                  :checked="isSelected(item)" 
+                  @change="toggleSelection(item, $event)" 
+                  class="rounded border-slate-600 bg-slate-700 text-indigo-500 focus:ring-indigo-500 pointer-events-auto"
+                />
+              </td>
+              <td class="py-2 px-3 whitespace-nowrap border-l border-transparent">
+                <div class="flex items-center text-sm font-medium text-white">
                   <svg v-if="item.attrs.isDirectory" class="h-4 w-4 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                   </svg>
@@ -437,7 +454,8 @@
         <h3 class="text-lg font-medium text-white mb-3">{{ $t('message.confirm_delete') }}</h3>
         <p class="text-slate-300 mb-4">
           {{ $t('message.confirm_delete_item') }}
-          <span class="font-medium text-white">{{ selectedItem?.filename }}</span>?
+          <span class="font-medium text-white" v-if="selectedItems.length === 1">{{ selectedItems[0].filename }}</span>
+          <span class="font-medium text-white" v-else>{{ selectedItems.length }} {{ $t('message.items') }}</span>?
           <br>
           <span class="text-red-400 text-sm">{{ $t('message.action_cannot_be_undone') }}</span>
         </p>
@@ -466,7 +484,8 @@
         <div class="mb-4">
           <label class="block text-sm font-medium text-slate-300 mb-1">{{ $t('message.remote_file') }}</label>
           <div class="bg-slate-700 text-white px-3 py-2 rounded-md text-sm">
-            {{ getFullPath(selectedItem?.filename) }}
+            <span v-if="selectedItems.length === 1">{{ getFullPath(selectedItems[0].filename) }}</span>
+            <span v-else>{{ selectedItems.length }} {{ $t('message.files') }} {{ $t('message.selected') }}</span>
           </div>
         </div>
         
@@ -662,6 +681,39 @@
         </div>
       </div>
     </div>
+
+    <!-- Extract Dialog -->
+    <div v-if="showExtractDialog" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div class="bg-slate-800 rounded-lg shadow-lg max-w-md w-full p-4">
+        <h3 class="text-lg font-medium text-white mb-3">{{ $t('message.extract') }}</h3>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-300 mb-1">{{ $t('message.extract_to') }}</label>
+          <input 
+            v-model="extractDestPath" 
+            type="text" 
+            class="w-full bg-slate-700 text-white px-3 py-2 rounded-md font-mono text-sm border-none focus:ring-1 focus:ring-indigo-500"
+            @keyup.enter="performExtract"
+          />
+          <p class="text-xs text-slate-400 mt-1">{{ $t('message.extract_dest_path_hint') }}</p>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+          <button 
+            @click="showExtractDialog = false" 
+            class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded transition-colors"
+          >
+            {{ $t('message.cancel') }}
+          </button>
+          <button 
+            @click="performExtract"
+            class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded transition-colors"
+          >
+            {{ $t('message.extract') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -676,7 +728,7 @@ const { t } = useI18n()
 
 // State
 const loading = ref(false)
-const selectedItem = ref(null)
+const selectedItems = ref([])
 const showUploadFileDialog = ref(false)
 const showCreateDirectoryDialog = ref(false)
 const showDeleteDialog = ref(false)
@@ -684,11 +736,13 @@ const showDownloadDialog = ref(false)
 const showRenameDialog = ref(false)
 const showCopyMoveDialog = ref(false)
 const showArchiveDialog = ref(false)
+const showExtractDialog = ref(false)
 const uploadLocalPath = ref('')
 const downloadLocalPath = ref('')
 const newDirectoryName = ref('')
 const newName = ref('')
 const copyMoveDestPath = ref('')
+const extractDestPath = ref('')
 const isMoveOperation = ref(false)
 const archiveName = ref('')
 const archiveType = ref('zip')
@@ -716,21 +770,34 @@ const hasActiveTransfers = computed(() => {
   return terminalStore.activeTransfers && terminalStore.activeTransfers.length > 0
 })
 
+const hasSelection = computed(() => selectedItems.value.length > 0)
+const canRename = computed(() => selectedItems.value.length === 1)
+
+const isAllSelected = computed(() => {
+  return terminalStore.directoryContents.length > 0 && 
+         selectedItems.value.length === terminalStore.directoryContents.length
+})
+
 const canDownload = computed(() => {
-  return selectedItem.value && selectedItem.value.attrs.isFile
+  return selectedItems.value.length > 0 && selectedItems.value.every(item => item.attrs.isFile)
 })
 
 const canExtract = computed(() => {
-  if (!selectedItem.value || !selectedItem.value.attrs.isFile) return false
-  const name = selectedItem.value.filename.toLowerCase()
-  return name.endsWith('.zip') || name.endsWith('.tar.gz') || name.endsWith('.tgz') || name.endsWith('.tar')
+  if (selectedItems.value.length === 0) return false
+  return selectedItems.value.every(item => {
+    if (!item.attrs.isFile) return false
+    const name = item.filename.toLowerCase()
+    return name.endsWith('.zip') || name.endsWith('.tar.gz') || name.endsWith('.tgz') || name.endsWith('.tar')
+  })
 })
 
 // Methods
 // Context Menu Handler
 const handleContextMenu = (event, item) => {
   event.preventDefault()
-  selectItem(item)
+  if (!isSelected(item)) {
+    selectItem(item)
+  }
   contextMenuPosition.value = { x: event.clientX, y: event.clientY }
   contextMenuVisible.value = true
 }
@@ -751,7 +818,8 @@ onUnmounted(() => {
 
 // Dialog Openers
 const openRenameDialog = () => {
-  newName.value = selectedItem.value.filename
+  if (selectedItems.value.length !== 1) return
+  newName.value = selectedItems.value[0].filename
   showRenameDialog.value = true
 }
 
@@ -768,9 +836,18 @@ const openMoveDialog = () => {
 }
 
 const openArchiveDialog = () => {
-  archiveName.value = `${selectedItem.value.filename}.zip`
+  if (selectedItems.value.length === 1) {
+    archiveName.value = `${selectedItems.value[0].filename}.zip`
+  } else {
+    archiveName.value = `archive_${Date.now()}.zip`
+  }
   archiveType.value = 'zip'
   showArchiveDialog.value = true
+}
+
+const openExtractDialog = () => {
+  extractDestPath.value = terminalStore.currentDirectory
+  showExtractDialog.value = true
 }
 
 const openDeleteDialog = () => {
@@ -795,7 +872,7 @@ const connectSftp = async () => {
 
 const disconnectSftp = () => {
   terminalStore.disconnectSftp()
-  selectedItem.value = null
+  selectedItems.value = []
 }
 
 const listCurrentDirectory = async () => {
@@ -817,7 +894,7 @@ const navigateToDirectory = async (path) => {
   try {
     loading.value = true
     await terminalStore.listDirectory(path)
-    selectedItem.value = null
+    selectedItems.value = []
   } catch (error) {
     console.error('Failed to navigate to directory:', error)
   } finally {
@@ -867,8 +944,29 @@ const navigateToParentDirectory = () => {
   navigateToDirectory(parentPath)
 }
 
+const isSelected = (item) => {
+  return selectedItems.value.some(i => i.filename === item.filename)
+}
+
+const toggleSelection = (item, event) => {
+  const index = selectedItems.value.findIndex(i => i.filename === item.filename)
+  if (index >= 0) {
+    selectedItems.value.splice(index, 1)
+  } else {
+    selectedItems.value.push(item)
+  }
+}
+
+const toggleAllSelection = (event) => {
+  if (event.target.checked) {
+    selectedItems.value = [...sortedDirectoryContents.value]
+  } else {
+    selectedItems.value = []
+  }
+}
+
 const selectItem = (item) => {
-  selectedItem.value = item
+  selectedItems.value = [item]
 }
 
 const handleItemDoubleClick = (item) => {
@@ -877,7 +975,8 @@ const handleItemDoubleClick = (item) => {
     const newPath = getFullPath(item.filename)
     navigateToDirectory(newPath)
   } else if (item.attrs.isFile) {
-    // For files, show download dialog
+    // For files, select only this one and show download dialog
+    selectedItems.value = [item]
     downloadSelectedItem()
   }
 }
@@ -893,9 +992,10 @@ const getFullPath = (filename) => {
 }
 
 const performRename = async () => {
+  if (selectedItems.value.length !== 1) return;
   try {
     loading.value = true
-    const oldPath = getFullPath(selectedItem.value.filename)
+    const oldPath = getFullPath(selectedItems.value[0].filename)
     
     // Calculate new path based on whether parent dir is changed or just filename
     // For simple rename, we assume same directory.
@@ -919,24 +1019,30 @@ const performRename = async () => {
 }
 
 const performCopyMove = async () => {
+  if (!selectedItems.value.length) return;
   try {
     loading.value = true
-    const sourcePath = getFullPath(selectedItem.value.filename)
     
-    // Construct destination path
-    let targetPath = copyMoveDestPath.value
-    if (!targetPath.endsWith('/')) {
-        targetPath += '/'
-    }
-    targetPath += selectedItem.value.filename
+    // Process all selected items
+    const operations = selectedItems.value.map(async (item) => {
+      const sourcePath = getFullPath(item.filename)
+      let targetPath = copyMoveDestPath.value
+      if (!targetPath.endsWith('/')) {
+          targetPath += '/'
+      }
+      targetPath += item.filename
 
-    if (isMoveOperation.value) {
-        await terminalStore.moveItem(sourcePath, targetPath)
-    } else {
-        await terminalStore.copyItem(sourcePath, targetPath)
-    }
+      if (isMoveOperation.value) {
+          return await terminalStore.moveItem(sourcePath, targetPath)
+      } else {
+          return await terminalStore.copyItem(sourcePath, targetPath)
+      }
+    });
+
+    await Promise.allSettled(operations);
     
     showCopyMoveDialog.value = false
+    selectedItems.value = []
     await listCurrentDirectory()
   } catch (error) {
     console.error('Failed to copy/move:', error)
@@ -947,13 +1053,15 @@ const performCopyMove = async () => {
 }
 
 const performArchive = async () => {
+  if (!selectedItems.value.length) return;
   try {
     loading.value = true
-    const sourcePath = getFullPath(selectedItem.value.filename)
+    const sourcePaths = selectedItems.value.map(item => getFullPath(item.filename));
     
-    await terminalStore.archiveItem(sourcePath, archiveName.value, archiveType.value)
+    await terminalStore.archiveItem(sourcePaths, archiveName.value, archiveType.value)
     
     showArchiveDialog.value = false
+    selectedItems.value = []
     await listCurrentDirectory()
   } catch (error) {
     console.error('Failed to archive:', error)
@@ -968,11 +1076,27 @@ const performExtract = async () => {
 
     try {
         loading.value = true
-        const sourcePath = getFullPath(selectedItem.value.filename)
-        // Determine type from extension
-        const type = sourcePath.toLowerCase().endsWith('.zip') ? 'zip' : 'tar'
         
-        await terminalStore.extractItem(sourcePath, type)
+        let targetPath = extractDestPath.value
+        if (!targetPath) {
+            targetPath = terminalStore.currentDirectory
+        }
+
+        const operations = selectedItems.value.map(async (item) => {
+            if (!item.attrs.isFile) return;
+            const name = item.filename.toLowerCase();
+            if (!(name.endsWith('.zip') || name.endsWith('.tar.gz') || name.endsWith('.tgz') || name.endsWith('.tar'))) return;
+            
+            const sourcePath = getFullPath(item.filename)
+            // Determine type from extension
+            const type = name.endsWith('.zip') ? 'zip' : 'tar'
+            return await terminalStore.extractItem(sourcePath, targetPath, type)
+        });
+
+        await Promise.allSettled(operations);
+        
+        showExtractDialog.value = false
+        selectedItems.value = []
         await listCurrentDirectory()
         alert('Extraction complete')
     } catch (error) {
@@ -1007,49 +1131,52 @@ const uploadFile = async () => {
 }
 
 const downloadSelectedItem = async () => {
-  if (!selectedItem.value || !selectedItem.value.attrs.isFile) {
-    return
-  }
+  if (!canDownload.value) return;
   
   try {
     loading.value = true
     
-    // Get the remote path
-    const remotePath = getFullPath(selectedItem.value.filename)
-    
     // Get auth token
     const authStore = useAuthStore()
     
-    // Use the API to download the file
-    const downloadResponse = await fetch('/api/files/sftp-download', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.token}`
-      },
-      body: JSON.stringify({
-        remotePath: remotePath,
-        connectionId: terminalStore.sftpConnectionId
+    for (const item of selectedItems.value) {
+      if (!item.attrs.isFile) continue;
+      
+      const remotePath = getFullPath(item.filename)
+      
+      // Use the API to download the file
+      const downloadResponse = await fetch('/api/files/sftp-download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authStore.token}`
+        },
+        body: JSON.stringify({
+          remotePath: remotePath,
+          connectionId: terminalStore.sftpConnectionId
+        })
       })
-    })
-    
-    if (!downloadResponse.ok) {
-      const errorData = await downloadResponse.json()
-      throw new Error(errorData.error || 'Failed to download file from SFTP server')
+      
+      if (!downloadResponse.ok) {
+        const errorData = await downloadResponse.json()
+        throw new Error(errorData.error || `Failed to download file ${item.filename}`)
+      }
+      
+      const downloadResult = await downloadResponse.json()
+      
+      // Create a download link and click it
+      const downloadLink = document.createElement('a')
+      downloadLink.href = downloadResult.downloadUrl + `?name=${encodeURIComponent(item.filename)}`
+      downloadLink.download = item.filename
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      document.body.removeChild(downloadLink)
+
+      // Slight delay for multiple downloads to prevent browser blocking
+      await new Promise(r => setTimeout(r, 500));
     }
     
-    const downloadResult = await downloadResponse.json()
-    
-    // Create a download link and click it
-    const downloadLink = document.createElement('a')
-    downloadLink.href = downloadResult.downloadUrl + `?name=${encodeURIComponent(selectedItem.value.filename)}`
-    downloadLink.download = selectedItem.value.filename
-    document.body.appendChild(downloadLink)
-    downloadLink.click()
-    document.body.removeChild(downloadLink)
-    
-    // Show success message
-    alert(`File ${selectedItem.value.filename} downloaded successfully!`)
+    selectedItems.value = []
     
   } catch (error) {
     console.error('Failed to download file:', error)
@@ -1104,22 +1231,24 @@ const createDirectory = async () => {
 }
 
 const deleteItem = async () => {
+  if (!selectedItems.value.length) return;
   try {
     loading.value = true
     
-    // Get the full path
-    const itemPath = getFullPath(selectedItem.value.filename)
-    
-    // Delete the item based on its type
-    if (selectedItem.value.attrs.isDirectory) {
-      await terminalStore.deleteDirectory(itemPath)
-    } else {
-      await terminalStore.deleteFile(itemPath)
-    }
+    const operations = selectedItems.value.map(async (item) => {
+      const itemPath = getFullPath(item.filename)
+      if (item.attrs.isDirectory) {
+        return await terminalStore.deleteDirectory(itemPath)
+      } else {
+        return await terminalStore.deleteFile(itemPath)
+      }
+    });
+
+    await Promise.allSettled(operations);
     
     // Close dialog and refresh directory
     showDeleteDialog.value = false
-    selectedItem.value = null
+    selectedItems.value = []
     
     // Refresh to update the file list
     await listCurrentDirectory()
@@ -1319,7 +1448,7 @@ watch(() => terminalStore.hasActiveSession, (hasSession) => {
   if (!hasSession && terminalStore.hasSftpConnection) {
     // Disconnect SFTP if SSH session is disconnected
     terminalStore.disconnectSftp()
-    selectedItem.value = null
+    selectedItems.value = []
   }
 })
 </script>

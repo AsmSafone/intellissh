@@ -220,9 +220,9 @@ class SFTPService extends EventEmitter {
 
       socket.on('sftp-archive-item', async (data) => {
         try {
-          const { sourcePath, archiveName, type } = data;
-          await this.archiveItem(connectionId, sourcePath, archiveName, type);
-          socket.emit('sftp-item-archived', { sourcePath, archiveName });
+          const { sourcePaths, archiveName, type } = data;
+          await this.archiveItem(connectionId, sourcePaths, archiveName, type);
+          socket.emit('sftp-item-archived', { sourcePaths, archiveName });
         } catch (error) {
           socket.emit('sftp-error', { message: error.message });
         }
@@ -230,9 +230,9 @@ class SFTPService extends EventEmitter {
 
       socket.on('sftp-extract-item', async (data) => {
         try {
-          const { sourcePath, type } = data;
-          await this.extractItem(connectionId, sourcePath, type);
-          socket.emit('sftp-item-extracted', { sourcePath });
+          const { sourcePath, destPath, type } = data;
+          await this.extractItem(connectionId, sourcePath, destPath, type);
+          socket.emit('sftp-item-extracted', { sourcePath, destPath });
         } catch (error) {
           socket.emit('sftp-error', { message: error.message });
         }
@@ -653,39 +653,51 @@ class SFTPService extends EventEmitter {
     return this.executeCommand(connectionId, command);
   }
 
-  async archiveItem(connectionId, sourcePath, archiveName, type) {
-    const escapedSource = sourcePath.replace(/"/g, '\\"');
+  async archiveItem(connectionId, sourcePaths, archiveName, type) {
+    // sourcePaths can be a string or an array of strings
+    const pathsArray = Array.isArray(sourcePaths) ? sourcePaths : [sourcePaths];
+    if (pathsArray.length === 0) {
+      throw new Error('No files to archive');
+    }
+
     const escapedArchiveName = archiveName.replace(/"/g, '\\"');
-    const parentDir = path.dirname(sourcePath);
-    const sourceBasename = path.basename(sourcePath);
+
+    // Assume all files are in the same parent directory based on the first file
+    const parentDir = path.dirname(pathsArray[0]);
+
+    // Only archive the basenames relative to the parent directory
+    const escapedBasenames = pathsArray
+      .map(p => `"${path.basename(p).replace(/"/g, '\\"')}"`)
+      .join(' ');
 
     let command;
     // Execute within the parent directory to avoid full paths in the archive
     if (type === 'zip') {
-      // Check for zip availability first? Assuming standard Linux tools
-      command = `cd "${path.dirname(sourcePath)}" && zip -r "${escapedArchiveName}" "${sourceBasename}"`;
+      command = `cd "${parentDir}" && zip -r "${escapedArchiveName}" ${escapedBasenames}`;
     } else { // tar.gz
-      command = `cd "${path.dirname(sourcePath)}" && tar -czf "${escapedArchiveName}" "${sourceBasename}"`;
+      command = `cd "${parentDir}" && tar -czf "${escapedArchiveName}" ${escapedBasenames}`;
     }
 
     return this.executeCommand(connectionId, command);
   }
 
-  async extractItem(connectionId, sourcePath, type) {
-    const escapedSource = sourcePath.replace(/"/g, '\\"');
+  async extractItem(connectionId, sourcePath, destPath, type) {
+    const escapedSource = path.basename(sourcePath).replace(/"/g, '\\"');
     const parentDir = path.dirname(sourcePath);
+    const escapedDest = destPath.replace(/"/g, '\\"');
 
-    const sourceBasename = path.basename(sourcePath);
     let command;
-    if (type === 'zip' || sourcePath.endsWith('.zip')) {
-      command = `cd "${parentDir}" && unzip -o "${sourceBasename}"`;
+    if (type === 'zip' || sourcePath.toLowerCase().endsWith('.zip')) {
+      // For unzip, -d specifies the destination folder
+      command = `mkdir -p "${escapedDest}" && cd "${parentDir}" && unzip -o "${escapedSource}" -d "${escapedDest}"`;
     } else {
       // Handle .tar.gz, .tgz, .tar
       let flags = '-xf';
-      if (sourcePath.endsWith('.gz') || sourcePath.endsWith('.tgz')) {
+      if (sourcePath.toLowerCase().endsWith('.gz') || sourcePath.toLowerCase().endsWith('.tgz')) {
         flags = '-xzf';
       }
-      command = `cd "${parentDir}" && tar ${flags} "${sourceBasename}"`;
+      // For tar, -C specifies the destination directory
+      command = `mkdir -p "${escapedDest}" && cd "${parentDir}" && tar ${flags} "${escapedSource}" -C "${escapedDest}"`;
     }
 
     return this.executeCommand(connectionId, command);

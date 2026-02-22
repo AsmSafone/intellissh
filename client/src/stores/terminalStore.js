@@ -780,13 +780,13 @@ export const useTerminalStore = defineStore('terminal', () => {
     })
   }
 
-  const archiveItem = (sourcePath, archiveName, type) => {
+  const archiveItem = (sourcePaths, archiveName, type) => {
     if (!socket.value?.connected || !sftpConnected.value) {
       return Promise.reject(new Error('SFTP not connected'))
     }
 
     return new Promise((resolve, reject) => {
-      socket.value.emit('sftp-archive-item', { sourcePath, archiveName, type })
+      socket.value.emit('sftp-archive-item', { sourcePaths, archiveName, type })
 
       const handleSuccess = (result) => {
         console.log('Item archived:', result)
@@ -813,13 +813,13 @@ export const useTerminalStore = defineStore('terminal', () => {
     })
   }
 
-  const extractItem = (sourcePath, type) => {
+  const extractItem = (sourcePath, destPath, type) => {
     if (!socket.value?.connected || !sftpConnected.value) {
       return Promise.reject(new Error('SFTP not connected'))
     }
 
     return new Promise((resolve, reject) => {
-      socket.value.emit('sftp-extract-item', { sourcePath, type })
+      socket.value.emit('sftp-extract-item', { sourcePath, destPath, type })
 
       const handleSuccess = (result) => {
         console.log('Item extracted:', result)

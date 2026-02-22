@@ -384,6 +384,8 @@
     "rename": "重命名",
     "move": "移动",
     "extract": "解压",
+    "extract_to": "提取至",
+    "extract_dest_path_hint": "留空以提取到当前目录",
     "rename_item": "重命名项目",
     "new_name": "新名称",
     "copy_item": "复制项目",

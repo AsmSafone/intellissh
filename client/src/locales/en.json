@@ -384,6 +384,8 @@
     "rename": "Rename",
     "move": "Move",
     "extract": "Extract",
+    "extract_to": "Extract to",
+    "extract_dest_path_hint": "Leave blank to extract to current directory",
     "rename_item": "Rename Item",
     "new_name": "New Name",
     "copy_item": "Copy Item",
