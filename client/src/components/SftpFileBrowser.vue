@@ -1305,11 +1305,30 @@ const handleFileUpload = async (event) => {
     })
     
     if (!uploadResponse.ok) {
-      const errorData = await uploadResponse.json()
-      throw new Error(errorData.error || 'Failed to upload files to server')
+      let errorMsg = `Server returned ${uploadResponse.status}`
+      try {
+        const errorText = await uploadResponse.text()
+        if (errorText) {
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMsg = errorData.error || errorMsg
+          } catch (e) {
+            errorMsg = errorText // fallback to plain text if not JSON
+          }
+        }
+      } catch (e) {
+        // Ignore read errors
+      }
+      throw new Error(errorMsg)
     }
     
-    const uploadResult = await uploadResponse.json()
+    let uploadResult
+    try {
+      const respText = await uploadResponse.text()
+      uploadResult = JSON.parse(respText)
+    } catch (e) {
+      throw new Error(`Parse upload response failed. Server returned non-JSON: ${uploadResponse.status}`)
+    }
     
     // 2. Initiate the SFTP upload from server to remote
     const sftpUploadResponse = await fetch('/api/files/sftp-upload', {
@@ -1329,8 +1348,19 @@ const handleFileUpload = async (event) => {
     })
     
     if (!sftpUploadResponse.ok) {
-      const errorData = await sftpUploadResponse.json()
-      throw new Error(errorData.error || 'Failed to upload files to SFTP server')
+      let errorMsg = `SFTP server returned ${sftpUploadResponse.status}`
+      try {
+        const errorText = await sftpUploadResponse.text()
+        if (errorText) {
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMsg = errorData.error || errorMsg
+          } catch (e) {
+            errorMsg = errorText
+          }
+        }
+      } catch (e) {}
+      throw new Error(errorMsg)
     }
     
     // Success, refresh the directory
