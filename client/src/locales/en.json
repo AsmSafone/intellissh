@@ -303,6 +303,7 @@
     "create": "Create",
     "no_active_terminal_session": "No active terminal session. Connect to SSH first.",
     "file_uploaded_successfully": "File {fileName} uploaded successfully to {remotePath}",
+    "files_uploaded_successfully": "{count} files uploaded successfully to {remotePath}",
     "upload_failed": "Upload failed: ",
     "folder_upload_note": "Folder upload functionality requires server-side implementation. \nThe folder structure was detected ({mainFolder} with {fileCount} files) \nand the main folder was created at {remoteFolderPath}.",
     "failed_to_process_folder_upload": "Failed to process folder upload:",

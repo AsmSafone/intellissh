@@ -128,6 +128,7 @@
           {{ $t('message.upload_file') }}
           <input 
             type="file" 
+            multiple
             class="hidden" 
             @change="handleFileUpload"
           />
@@ -1278,20 +1279,22 @@ const formatDate = (timestamp) => {
 // Get item type for display
 // Handle file upload from browser file dialog
 const handleFileUpload = async (event) => {
-  const file = event.target.files[0]
-  if (!file) return
+  const files = Array.from(event.target.files)
+  if (files.length === 0) return
   
   try {
     loading.value = true
     
-    // Create a FormData object to send the file
+    // Create a FormData object to send all files
     const formData = new FormData()
-    formData.append('file', file)
+    files.forEach(file => {
+      formData.append('files', file)
+    })
     
-    // Get the remote path where the file should be uploaded
-    const remotePath = getFullPath(file.name)
+    // Get the remote directory where files should be uploaded
+    const remotePath = terminalStore.currentDirectory
     
-    // 1. Upload the file to the server
+    // 1. Upload files to the server
     const authStore = useAuthStore()
     const uploadResponse = await fetch('/api/files/upload', {
       method: 'POST',
@@ -1303,7 +1306,7 @@ const handleFileUpload = async (event) => {
     
     if (!uploadResponse.ok) {
       const errorData = await uploadResponse.json()
-      throw new Error(errorData.error || 'Failed to upload file to server')
+      throw new Error(errorData.error || 'Failed to upload files to server')
     }
     
     const uploadResult = await uploadResponse.json()
@@ -1316,7 +1319,10 @@ const handleFileUpload = async (event) => {
         'Authorization': `Bearer ${authStore.token}`
       },
       body: JSON.stringify({
-        localPath: uploadResult.localPath,
+        files: uploadResult.files.map(f => ({
+          localPath: f.localPath,
+          filename: f.filename
+        })),
         remotePath: remotePath,
         connectionId: terminalStore.sftpConnectionId
       })
@@ -1324,14 +1330,18 @@ const handleFileUpload = async (event) => {
     
     if (!sftpUploadResponse.ok) {
       const errorData = await sftpUploadResponse.json()
-      throw new Error(errorData.error || 'Failed to upload file to SFTP server')
+      throw new Error(errorData.error || 'Failed to upload files to SFTP server')
     }
     
     // Success, refresh the directory
     await listCurrentDirectory()
     
     // Show success message
-    alert(t('message.file_uploaded_successfully', { fileName: file.name, remotePath: remotePath }))
+    if (files.length === 1) {
+      alert(t('message.file_uploaded_successfully', { fileName: files[0].name, remotePath: getFullPath(files[0].name) }))
+    } else {
+      alert(t('message.files_uploaded_successfully', { count: files.length, remotePath: remotePath }))
+    }
     
   } catch (error) {
     console.error('Failed to process file upload:', error)

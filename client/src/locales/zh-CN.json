@@ -303,6 +303,7 @@
     "create": "创建",
     "no_active_terminal_session": "没有活动的终端会话。请先连接到 SSH。",
     "file_uploaded_successfully": "文件 {fileName} 已成功上传到 {remotePath}",
+    "files_uploaded_successfully": "{count} 个文件已成功上传到 {remotePath}",
     "upload_failed": "上传失败: ",
     "folder_upload_note": "文件夹上传功能需要服务器端实现。\n已检测到文件夹结构 ({mainFolder} 包含 {fileCount} 个文件)，\n并且主文件夹已在 {remoteFolderPath} 创建。",
     "failed_to_process_folder_upload": "处理文件夹上传失败:",

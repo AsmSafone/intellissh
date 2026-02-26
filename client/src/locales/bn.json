@@ -303,6 +303,7 @@
     "create": "তৈরি করুন",
     "no_active_terminal_session": "কোনো সক্রিয় টার্মিনাল সেশন নেই। প্রথমে SSH-এ সংযোগ করুন।",
     "file_uploaded_successfully": "ফাইল {fileName} সফলভাবে {remotePath}-এ আপলোড হয়েছে",
+    "files_uploaded_successfully": "{count} টি ফাইল সফলভাবে {remotePath}-এ আপলোড হয়েছে",
     "upload_failed": "আপলোড ব্যর্থ হয়েছে: ",
     "folder_upload_note": "ফোল্ডার আপলোড কার্যকারিতার জন্য সার্ভার-সাইড ইমপ্লিমেন্টেশন প্রয়োজন। \nফোল্ডার স্ট্রাকচার শনাক্ত করা হয়েছে ({mainFolder} সহ {fileCount} ফাইল) \nএবং প্রধান ফোল্ডারটি {remoteFolderPath}-এ তৈরি করা হয়েছে।",
     "failed_to_process_folder_upload": "ফোল্ডার আপলোড প্রক্রিয়া করতে ব্যর্থ:",
